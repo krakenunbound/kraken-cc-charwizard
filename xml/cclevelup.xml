@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+	<!-- Level up for SmiteWorks' official C&C ruleset (CnCRPG), laid out like the FGU 5e level up (see
+	     dev/5E_WIZARD_STUDY.md): a cog beside the level on the sheet opens the
+	     Class & Level window (level, XP, next level, Lvl Up, the classes), and
+	     Lvl Up opens the Level Up window: Class (the classes; once one is chosen,
+	     only what the new level brings, as cards; dual class and reclass),
+	     Hit Points, Spells (a list for each class that gains spells), Finish
+	     (warnings, Level Up, summary). The C&C steps are CCLevelUp's. -->
+
+	<!-- Cog beside the level on the character sheet. -->
+	<windowclass name="char_main_overview" merge="join">
+		<sheetdata>
+			<button_details name="cclevelup_button">
+				<anchored to="level" width="20" height="20">
+					<top offset="1" />
+					<right anchor="left" offset="-48" />
+				</anchored>
+				<tooltip text="Classes and levels (Lvl Up)" />
+				<script>
+					function onButtonPress()
+						Interface.openWindow("cclevelup_classes", window.getDatabaseNode());
+					end
+				</script>
+			</button_details>
+			<stringcontrol name="ccsecondclass">
+				<anchored to="class" width="96" height="14">
+					<top anchor="bottom" offset="1" />
+					<left offset="36" />
+				</anchored>
+				<font>sheetlabelinline</font>
+				<readonly />
+				<nodrag />
+				<script>
+					function onInit()
+						DB.addHandler(DB.getPath(window.getDatabaseNode(), "classes"), "onChildUpdate", update);
+						update();
+					end
+					function onClose()
+						DB.removeHandler(DB.getPath(window.getDatabaseNode(), "classes"), "onChildUpdate", update);
+					end
+					function update()
+						setValue(CCLevelUp.describeSecondClass(window.getDatabaseNode()));
+					end
+				</script>
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- Class & Level window behind the cog (as 5e's): level, XP, next level and
+	     Lvl Up across the top; the classes below. -->
+	<windowclass name="cclevelup_classes">
+		<frame>utilitybox</frame>
+		<placement>
+			<size width="560" height="300" />
+		</placement>
+		<sizelimits>
+			<minimum width="520" height="260" />
+			<dynamic />
+		</sizelimits>
+		<script>
+			function onInit()
+				DB.addHandler(DB.getPath(getDatabaseNode()), "onChildUpdate", update);
+				update();
+			end
+			function onClose()
+				DB.removeHandler(DB.getPath(getDatabaseNode()), "onChildUpdate", update);
+			end
+			function update()
+				local node = getDatabaseNode();
+				title.setValue("Class &amp; Level - " .. DB.getValue(node, "name", ""));
+				level.setValue(tostring(DB.getValue(node, "classes.slot1.level", 0)));
+				exp.setValue(tostring(DB.getValue(node, "exp", 0)));
+				expnext.setValue(tostring(DB.getValue(node, "expneeded", 0)));
+				list.closeAll();
+				for _, t in ipairs(CCLevelUp.getClassRows(node)) do
+					local w = list.createWindow();
+					w.name.setValue(t.name);
+					w.level.setValue(tostring(t.level));
+					w.note.setValue(t.note or "");
+				end
+			end
+		</script>
+		<sheetdata>
+			<windowtitlebar_utilitybox name="title" />
+			<windowmenubar_utilitybox name="menubar" />
+			<anchor_content_utilitybox_top />
+			<anchor_content_utilitybox_bottom />
+			<genericcontrol name="topframe">
+				<anchored to="contentanchor" height="56">
+					<top anchor="bottom" offset="10" />
+					<left offset="10" />
+					<right offset="-10" />
+				</anchored>
+				<frame name="groupbox" offset="4,4,4,4" />
+				<disabled />
+			</genericcontrol>
+			<ccwiz_bar name="level_label"><anchored to="topframe" position="insidetopleft" offset="10,6" width="90" height="18" /><static>Level</static></ccwiz_bar>
+			<ccwiz_value name="level"><anchored to="level_label" position="below" offset="0,6" height="20" /></ccwiz_value>
+			<ccwiz_bar name="exp_label"><anchored to="level_label" position="righthigh" offset="10,0" width="90" height="18" /><static>XP</static></ccwiz_bar>
+			<ccwiz_value name="exp"><anchored to="exp_label" position="below" offset="0,6" height="20" /></ccwiz_value>
+			<ccwiz_bar name="expnext_label"><anchored to="exp_label" position="righthigh" offset="10,0" width="100" height="18" /><static>Next Level</static></ccwiz_bar>
+			<ccwiz_value name="expnext"><anchored to="expnext_label" position="below" offset="0,6" height="20" /></ccwiz_value>
+			<button_text name="levelup">
+				<anchored to="topframe" position="insidetopright" offset="12,14" width="80" height="26" />
+				<state text="Lvl Up" />
+				<tooltip text="Level up this character: class, hit points and spells, step by step" />
+				<script>
+					function onButtonPress()
+						CCLevelUp.open(window.getDatabaseNode());
+						window.close();
+					end
+				</script>
+			</button_text>
+			<windowlist name="list">
+				<anchored to="topframe">
+					<top anchor="bottom" offset="14" />
+					<left offset="4" />
+					<right offset="-4" />
+					<bottom parent="" offset="-24" />
+				</anchored>
+				<frame name="groupbox" offset="10,10,10,10" />
+				<class>cclevelup_classes_row</class>
+				<skipempty />
+			</windowlist>
+			<resize_utilitybox />
+		</sheetdata>
+	</windowclass>
+	<windowclass name="cclevelup_classes_row">
+		<margins control="0,0,0,2" />
+		<sheetdata>
+			<stringcontrol name="name"><bounds>4,2,170,20</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="level"><bounds>178,2,30,20</bounds><font>sheettext</font><center /><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="note"><bounds>214,2,-4,20</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- The Level Up window -->
+	<windowclass name="cclevelup">
+		<frame>utilitybox</frame>
+		<placement>
+			<size width="900" height="760" />
+		</placement>
+		<sizelimits>
+			<minimum width="820" height="600" />
+			<dynamic />
+		</sizelimits>
+		<script>
+			function onInit()
+				CCLevelUp.registerWindow(self);
+			end
+			function onClose()
+				CCLevelUp.unregisterWindow(self);
+			end
+		</script>
+		<sheetdata>
+			<windowtitlebar_utilitybox name="title">
+				<static>Character Level Up</static>
+			</windowtitlebar_utilitybox>
+			<windowmenubar_utilitybox name="menubar" />
+			<anchor_content_utilitybox_top />
+			<anchor_content_utilitybox_bottom />
+			<sub_content_top name="sub_tabs">
+				<anchored height="44" />
+				<class>cclevelup_tabs</class>
+			</sub_content_top>
+			<sub_content_framed_groupbox_hidden name="sub_class"><class>cclevelup_page_class</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_hp"><class>cclevelup_page_hp</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_spells"><class>cclevelup_page_spells</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_finish"><class>cclevelup_page_finish</class></sub_content_framed_groupbox_hidden>
+			<scrollbar_content_base><anchored to="sub_class" /><target>sub_class</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_hp" /><target>sub_hp</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_spells" /><target>sub_spells</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_finish" /><target>sub_finish</target></scrollbar_content_base>
+			<resize_utilitybox />
+		</sheetdata>
+	</windowclass>
+
+	<template name="cclevelup_tab">
+		<button_text>
+			<anchored to="leftanchor" width="140" height="28">
+				<top />
+				<left relation="relative" offset="4" postoffset="4" />
+			</anchored>
+			<script>
+				function onButtonPress()
+					CCLevelUp.showTab(getName():gsub("^tab_", ""));
+				end
+			</script>
+		</button_text>
+	</template>
+
+	<windowclass name="cclevelup_tabs">
+		<sheetdata>
+			<genericcontrol name="leftanchor">
+				<anchored position="insidetopleft" offset="6,8" width="0" height="28" />
+				<disabled />
+			</genericcontrol>
+			<cclevelup_tab name="tab_class"><state text="Class" /></cclevelup_tab>
+			<cclevelup_tab name="tab_hp"><state text="Hit Points" /></cclevelup_tab>
+			<cclevelup_tab name="tab_spells"><state text="Spells" /></cclevelup_tab>
+			<cclevelup_tab name="tab_finish"><state text="Finish" /></cclevelup_tab>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== CLASS ============================== -->
+	<!-- One class row: Level Up (Cancel once chosen), or for another class Add
+	     Class (dual class) and Reclass with the table letter and rule. -->
+	<windowclass name="cclevelup_class_row">
+		<margins control="0,0,0,4" />
+		<frame>groupbox</frame>
+		<script>
+			local _sPath = "";
+			local _bNew = false;
+			local _bChosen = false;
+			function setEntry(t, bChosen)
+				_sPath = t.slot;
+				name.setValue(t.name);
+				rule.setValue(t.note or "");
+				if bChosen then
+					level.setValue(string.format("Level %d -> %d", CCLevelUp.getFromLevel(), CCLevelUp.getToLevel()));
+					go.setStateText(0, "Cancel");
+				else
+					level.setValue(string.format("Level %d", t.level));
+					go.setStateText(0, "Level Up");
+				end
+				go.setVisible(t.canlevel and true or false);
+				reclass.setVisible(false);
+				_bChosen = bChosen;
+			end
+			function setNewClass(t)
+				_sPath = DB.getPath(t.node);
+				name.setValue(DB.getValue(t.node, "name", ""));
+				level.setValue(t.code ~= "" and ("[" .. t.code .. "]") or "");
+				rule.setValue(t.rule);
+				go.setStateText(0, "Add Class");
+				go.setVisible(t.allowed);
+				_bNew = true;
+			end
+			function onGo()
+				if _bNew then
+					CCLevelUp.chooseDualClass(_sPath);
+				elseif _bChosen then
+					CCLevelUp.cancelChoice();
+				else
+					CCLevelUp.chooseLevelUp(_sPath);
+				end
+			end
+			function onReclass()
+				CCLevelUp.chooseReclass(_sPath);
+			end
+		</script>
+		<sheetdata>
+			<stringcontrol name="name"><bounds>12,7,170,22</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="level"><bounds>186,7,100,22</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+			<button_text name="reclass">
+				<bounds>-96,6,84,24</bounds>
+				<state text="Reclass" />
+				<tooltip text="Abandon the current class for this one (Adventurer's Backpack)" />
+				<script>function onButtonPress() window.onReclass(); end</script>
+			</button_text>
+			<button_text name="go">
+				<bounds>-202,6,100,24</bounds>
+				<script>function onButtonPress() window.onGo(); end</script>
+			</button_text>
+			<stringcontrol name="rule"><bounds>290,8,-208,36</bounds><font>sheettext</font><multilinespacing>18</multilinespacing><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="cclevelup_page_class">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("cclevelup_steps_class"));
+				onPageShow();
+			end
+			function onPageShow()
+				local nodeChar = CCLevelUp.getChar();
+				local nodeTarget = CCLevelUp.getTarget();
+				local L = CCLevelUp.getState();
+				classes.closeAll();
+				for _, t in ipairs(CCLevelUp.getClassRows(nodeChar)) do
+					local bChosen = L.mode == "levelup" and L.slot == t.slot;
+					if not nodeTarget or bChosen then
+						classes.createWindow().setEntry(t, bChosen);
+					end
+				end
+				-- Once a class is chosen: only what the new level brings, as cards.
+				cards.closeAll();
+				chosen_header.setVisible(nodeTarget ~= nil);
+				cards.setVisible(nodeTarget ~= nil);
+				if nodeTarget then
+					local tModes = { dual = "Add Class (dual class): ", reclass = "Reclass to " };
+					chosen_header.setValue((tModes[L.mode] or "") .. DB.getValue(nodeTarget, "name", ""):upper() .. " " .. CCLevelUp.getToLevel());
+					for _, t in ipairs(CCLevelUp.getFeatureCards()) do
+						cards.createWindow().setData(t.title, t.text, t.open);
+					end
+				end
+				-- Dual class and reclass (Adventurer's Backpack).
+				local bOk, sWhy = CCLevelUp.canAddClass();
+				local bNewMode = L.mode == "dual" or L.mode == "reclass";
+				newclasses.closeAll();
+				dual_note.setValue(bOk and Interface.getString("cclevelup_dual_note") or sWhy);
+				if bOk and (not nodeTarget or bNewMode) then
+					for _, t in ipairs(CCLevelUp.getNewClassChoices()) do
+						if not nodeTarget or DB.getPath(t.node) == L.newclass then
+							newclasses.createWindow().setNewClass(t);
+						end
+					end
+				end
+				change_header.setVisible(not nodeTarget or bNewMode);
+				dual_note.setVisible(not nodeTarget);
+				newclasses.setVisible(not nodeTarget or bNewMode);
+				cancel_new.setVisible(bNewMode);
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="classes_header"><static text="Classes" /></header_content_framed_metalplate>
+			<list_content_noscroll_top name="classes">
+				<class>cclevelup_class_row</class>
+			</list_content_noscroll_top>
+			<header_content_framed_metalplate name="chosen_header" />
+			<list_content_noscroll_top name="cards">
+				<class>ccwiz_card</class>
+			</list_content_noscroll_top>
+			<header_content_framed_metalplate name="change_header"><static text="Change Class (Adventurer's Backpack)" /></header_content_framed_metalplate>
+			<stringc_content_noframe_noscroll_static_top name="dual_note">
+				<anchored><left offset="12" /><right offset="-12" /></anchored>
+			</stringc_content_noframe_noscroll_static_top>
+			<button_text_content_top name="cancel_new">
+				<state text="Cancel" />
+				<script>function onButtonPress() CCLevelUp.cancelChoice(); end</script>
+			</button_text_content_top>
+			<list_content_noscroll_top name="newclasses">
+				<class>cclevelup_class_row</class>
+			</list_content_noscroll_top>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================ HIT POINTS ============================ -->
+	<windowclass name="cclevelup_page_hp">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("cclevelup_steps_hp"));
+				onPageShow();
+			end
+			function onPageShow()
+				local L = CCLevelUp.getState();
+				if sub_panel.subwindow then
+					local w = sub_panel.subwindow;
+					w.plan.setValue(CCLevelUp.describeHPRoll());
+					w.roll.setVisible(CCLevelUp.needsHPRoll());
+					w.result.setValue(L.hp and string.format("Rolled: +%d hit points", L.hp) or "");
+				end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header"><static text="Hit Points" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_panel">
+				<anchored height="140" />
+				<class>cclevelup_panel_hp</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+	<windowclass name="cclevelup_panel_hp">
+		<sheetdata>
+			<stringcontrol name="plan"><bounds>24,8,-24,60</bounds><font>sheettext</font><multilinespacing>20</multilinespacing><readonly /><nodrag /></stringcontrol>
+			<button_text name="roll">
+				<bounds>24,76,180,28</bounds>
+				<state text="Roll Hit Points" />
+				<script>function onButtonPress() CCLevelUp.rollHP(); end</script>
+			</button_text>
+			<stringcontrol name="result"><bounds>220,80,-24,24</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== SPELLS ============================== -->
+	<windowclass name="cclevelup_spell_row">
+		<margins control="0,0,0,2" />
+		<script>
+			local _sPath = "";
+			local _bSetting = false;
+			function setData(t, bOn)
+				_sPath = DB.getPath(t.node);
+				level.setValue(tostring(t.level));
+				name.setValue(DB.getValue(t.node, "name", ""));
+				_bSetting = true;
+				pick.setValue(bOn and 1 or 0);
+				_bSetting = false;
+			end
+			function onPick(bOn)
+				if _bSetting then return; end
+				if CCLevelUp.toggleSpell(_sPath, bOn) == false then
+					_bSetting = true;
+					pick.setValue(0);
+					_bSetting = false;
+				end
+				windowlist.window.updateCount();
+			end
+			function onOpen()
+				Interface.openWindow("spell", DB.getValue(_sPath .. ".officialpath", _sPath));
+			end
+		</script>
+		<sheetdata>
+			<buttonc_checkbox name="pick">
+				<bounds>4,2,20,20</bounds>
+				<script>function onValueChanged() window.onPick(getValue() == 1); end</script>
+			</buttonc_checkbox>
+			<stringcontrol name="level"><bounds>30,2,24,20</bounds><font>sheettext</font><center /><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="name">
+				<bounds>60,2,-4,20</bounds>
+				<font>sheettext</font>
+				<readonly />
+				<script>function onDoubleClick() window.onOpen(); return true; end</script>
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="cclevelup_page_spells">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("cclevelup_steps_spells"));
+				onPageShow();
+			end
+			function onPageShow()
+				if sub_panel.subwindow then sub_panel.subwindow.onPageShow(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header"><static text="New Spells" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_panel">
+				<anchored height="520" />
+				<class>cclevelup_panel_spells</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+	<windowclass name="cclevelup_panel_spells">
+		<script>
+			function updateCount()
+				chosen.setValue(CCLevelUp.describeSpellPicks());
+			end
+			function refreshList()
+				list.closeAll();
+				for _, t in ipairs(CCLevelUp.getSpellChoices(search.getValue())) do
+					list.createWindow().setData(t, CCLevelUp.isSpellPicked(DB.getPath(t.node)));
+				end
+				updateCount();
+			end
+			function onPageShow()
+				-- A button for each list (5e: the class block's Spells toggle).
+				local tSets = CCLevelUp.getCasterSets();
+				local nSet = CCLevelUp.getSpellSetIndex();
+				for i = 1, 3 do
+					local c = self["set_" .. i];
+					c.setVisible(#tSets > 1 and tSets[i] ~= nil);
+					if tSets[i] then
+						c.setText(tSets[i].class);
+						c.setFrame(i == nSet and "buttondown" or "buttonup", 5, 5, 5, 5);
+					end
+				end
+				lore.setValue(CCLevelUp.hasSpellStep() and "Pick the spells for the new spell slots (double-click a name to read it). Spells already known are not listed." or "This level brings no new spells to choose.");
+				refreshList();
+			end
+		</script>
+		<sheetdata>
+			<button_text name="set_1"><bounds>24,6,160,24</bounds><invisible /><script>function onButtonPress() CCLevelUp.setSpellSetIndex(1); end</script></button_text>
+			<button_text name="set_2"><bounds>190,6,160,24</bounds><invisible /><script>function onButtonPress() CCLevelUp.setSpellSetIndex(2); end</script></button_text>
+			<button_text name="set_3"><bounds>356,6,160,24</bounds><invisible /><script>function onButtonPress() CCLevelUp.setSpellSetIndex(3); end</script></button_text>
+			<stringcontrol name="lore"><bounds>24,38,-24,22</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="chosen"><bounds>24,64,-24,44</bounds><font>reference-b</font><multilinespacing>20</multilinespacing><readonly /><nodrag /></stringcontrol>
+			<label><bounds>24,114,55,22</bounds><static text="Search" /></label>
+			<stringcontrol name="search">
+				<bounds>85,114,200,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<script>function onValueChanged() window.refreshList(); end</script>
+			</stringcontrol>
+			<windowlist name="list">
+				<bounds>24,148,-34,-10</bounds>
+				<frame name="groupbox" offset="10,10,10,10" />
+				<class>cclevelup_spell_row</class>
+				<columns width="300" fillwidth="true" />
+				<skipempty />
+			</windowlist>
+			<scrollbar><anchored to="list" /><target>list</target></scrollbar>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== FINISH ============================== -->
+	<windowclass name="cclevelup_page_finish">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("cclevelup_steps_finish"));
+				onPageShow();
+			end
+			function onPageShow()
+				local tWarnings = CCLevelUp.getWarnings();
+				warnings.closeAll();
+				for _, s in ipairs(tWarnings) do
+					warnings.createWindow().text.setValue(s);
+				end
+				nowarnings.setVisible(#tWarnings == 0);
+				if sub_save.subwindow then sub_save.subwindow.go.setVisible(CCLevelUp.getMissing() == ""); end
+				summary.setValue(CCLevelUp.describeSummary());
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="warnings_header"><static textres="ccwiz_header_warnings" /></header_content_framed_metalplate>
+			<list_content_noscroll_top name="warnings">
+				<class>ccwiz_warning_row</class>
+			</list_content_noscroll_top>
+			<stringc_content_noframe_noscroll_static_top name="nowarnings">
+				<anchored><left offset="12" /></anchored>
+				<static text="Nothing left to do: the level is ready." />
+			</stringc_content_noframe_noscroll_static_top>
+			<header_content_framed_metalplate name="save_header"><static text="Level Up" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_save">
+				<anchored height="50" />
+				<class>cclevelup_panel_save</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="summary_header"><static textres="ccwiz_header_summary" /></header_content_framed_metalplate>
+			<stringc_content_noframe_noscroll_static_top name="summary">
+				<anchored><left offset="12" /><right offset="-12" /></anchored>
+			</stringc_content_noframe_noscroll_static_top>
+		</sheetdata>
+	</windowclass>
+	<windowclass name="cclevelup_panel_save">
+		<sheetdata>
+			<button_text name="go">
+				<bounds>24,8,200,32</bounds>
+				<state text="Level Up" />
+				<script>function onButtonPress() CCLevelUp.commit(); end</script>
+			</button_text>
+		</sheetdata>
+	</windowclass>
+</root>

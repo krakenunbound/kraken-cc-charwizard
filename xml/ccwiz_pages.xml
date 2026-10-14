@@ -1,0 +1,1293 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+	<!-- Pages of the C&C character wizard, laid out like the FGU 5e character
+	     wizard (see dev/5E_WIZARD_STUDY.md): each page scrolls top to bottom:
+	     a collapsible Instructions section (the page's lore, then numbered
+	     steps), metal-plate section headers, pick lists that give way to the
+	     chosen record with its portrait and collapsible cards, and fixed panels
+	     for scores, primes, hit points, the shop and spells. The steps and their
+	     order are C&C's own. -->
+
+	<!-- ============================ ABILITIES ============================ -->
+	<windowclass name="ccwiz_page_abilities">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				header.setValue(Interface.getString("ccwiz_head_abilities"));
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_abilities") .. "\r\r" .. Interface.getString("ccwiz_steps_abilities"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_abilities");
+				if sub_panel.subwindow then sub_panel.subwindow.onPageShow(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<sub_content_top name="sub_panel">
+				<anchored height="300" />
+				<class>ccwiz_panel_abilities</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<!-- Method and Roll; six badges (total and modifier); the Base row (drag to
+	     swap) and the Race row, so the player sees where each point comes from. -->
+	<windowclass name="ccwiz_panel_abilities">
+		<script>
+			local STATS = { "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma" };
+			function onInit()
+				method.add("3d6", Interface.getString("ccwiz_method_3d6"));
+				method.add("4d6", Interface.getString("ccwiz_method_4d6"));
+				method.add("3d6order", Interface.getString("ccwiz_method_3d6order"));
+				onPageShow();
+			end
+			function onPageShow()
+				local S = CCWizard.getState();
+				method.setValue(CCWizard.getMethod());
+				method.setReadOnly(CCWizard.getForcedMethod() ~= nil);
+				hint.setValue(Interface.getString(CCWizard.getMethod() == "3d6order" and "ccwiz_hint_order" or "ccwiz_hint_swap"));
+				for _, s in ipairs(STATS) do
+					local n = S.scores[s];
+					local nFinal = CCWizard.getFinalScore(s);
+					self["score_" .. s].setValue(n or 0);
+					local nRace = CCWizard.getRaceMod(s);
+					self["race_" .. s].setValue(nRace ~= 0 and string.format("%+d", nRace) or "");
+					self["total_" .. s].setValue(nFinal and tostring(nFinal) or "");
+					self["mod_" .. s].setValue(nFinal and string.format("%+d", CCWizard.getModifier(nFinal)) or "");
+				end
+			end
+		</script>
+		<sheetdata>
+			<label><bounds>24,8,70,22</bounds><static textres="ccwiz_label_method" /></label>
+			<comboboxc name="method">
+				<bounds>100,8,300,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<listdirection>down</listdirection>
+				<unsorted />
+				<script>
+					function onSelect(sValue)
+						CCWizard.setMethod(sValue);
+						window.onPageShow();
+					end
+				</script>
+			</comboboxc>
+			<button_text name="rollall">
+				<bounds>420,6,130,26</bounds>
+				<state textres="ccwiz_btn_rollall" />
+				<script>function onButtonPress() CCWizard.rollAll(); end</script>
+			</button_text>
+			<stringcontrol name="hint"><bounds>570,10,-24,20</bounds><font>sheetlabel</font><readonly /><nodrag /></stringcontrol>
+
+			<!-- Badges -->
+			<ccwiz_badge_label><bounds>110,48,86,18</bounds><static>STR</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>240,48,86,18</bounds><static>DEX</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>370,48,86,18</bounds><static>CON</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>500,48,86,18</bounds><static>INT</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>630,48,86,18</bounds><static>WIS</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>760,48,86,18</bounds><static>CHA</static></ccwiz_badge_label>
+			<ccwiz_badge_total name="total_strength"><bounds>110,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_dexterity"><bounds>240,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_constitution"><bounds>370,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_intelligence"><bounds>500,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_wisdom"><bounds>630,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_charisma"><bounds>760,68,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_mod name="mod_strength"><bounds>128,112,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_dexterity"><bounds>258,112,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_constitution"><bounds>388,112,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_intelligence"><bounds>518,112,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_wisdom"><bounds>648,112,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_charisma"><bounds>778,112,50,18</bounds></ccwiz_badge_mod>
+
+			<!-- Base (rolled) -->
+			<ccwiz_bar><bounds>10,146,-10,20</bounds><static textres="ccwiz_header_base" /></ccwiz_bar>
+			<ccwiz_scoreslot name="score_strength"><bounds>128,178,50,30</bounds></ccwiz_scoreslot>
+			<ccwiz_scoreslot name="score_dexterity"><bounds>258,178,50,30</bounds></ccwiz_scoreslot>
+			<ccwiz_scoreslot name="score_constitution"><bounds>388,178,50,30</bounds></ccwiz_scoreslot>
+			<ccwiz_scoreslot name="score_intelligence"><bounds>518,178,50,30</bounds></ccwiz_scoreslot>
+			<ccwiz_scoreslot name="score_wisdom"><bounds>648,178,50,30</bounds></ccwiz_scoreslot>
+			<ccwiz_scoreslot name="score_charisma"><bounds>778,178,50,30</bounds></ccwiz_scoreslot>
+
+			<!-- Race -->
+			<ccwiz_bar><bounds>10,222,-10,20</bounds><static textres="ccwiz_header_racemods" /></ccwiz_bar>
+			<ccwiz_value name="race_strength"><bounds>128,254,50,30</bounds></ccwiz_value>
+			<ccwiz_value name="race_dexterity"><bounds>258,254,50,30</bounds></ccwiz_value>
+			<ccwiz_value name="race_constitution"><bounds>388,254,50,30</bounds></ccwiz_value>
+			<ccwiz_value name="race_intelligence"><bounds>518,254,50,30</bounds></ccwiz_value>
+			<ccwiz_value name="race_wisdom"><bounds>648,254,50,30</bounds></ccwiz_value>
+			<ccwiz_value name="race_charisma"><bounds>778,254,50,30</bounds></ccwiz_value>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== RACE ============================== -->
+	<windowclass name="ccwiz_page_race">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_race") .. "\r\r" .. Interface.getString("ccwiz_steps_race"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_race");
+				local nodeSel = CCWizard.getRaceNode();
+				local bPick = nodeSel == nil;
+				sub_filter.setVisible(bPick);
+				list.setVisible(bPick);
+				sub_chosen.setVisible(not bPick);
+				change.setVisible(not bPick);
+				traits_header.setVisible(not bPick);
+				cards.setVisible(not bPick);
+				if bPick then
+					header.setValue(Interface.getString("ccwiz_header_races"));
+					sub_filter.subwindow.setKind("race", "Race");
+					list.closeAll();
+					for _, node in ipairs(CCWizard.getPickList("Race", "race")) do
+						list.createWindow().setData(node, "race");
+					end
+					return;
+				end
+				header.setValue(DB.getValue(nodeSel, "name", ""):upper());
+				sub_chosen.subwindow.setRace(nodeSel);
+				cards.closeAll();
+				for _, v in pairs(DB.getChildren(nodeSel, "abilities")) do
+					cards.createWindow().setData(DB.getValue(v, "name", ""), CCWizard.plainText(DB.getValue(v, "text", "")), false);
+				end
+				cards.applySort();
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<button_text name="change">
+				<anchored to="header" position="insidetopleft" offset="10,0" width="110" height="20" />
+				<state textres="ccwiz_btn_changerace" />
+				<script>function onButtonPress() CCWizard.selectRace(nil); end</script>
+			</button_text>
+			<sub_content_top name="sub_filter">
+				<anchored height="66" />
+				<class>ccwiz_filter</class>
+			</sub_content_top>
+			<list_content_noscroll_top name="list">
+				<class>ccwiz_pick_row</class>
+			</list_content_noscroll_top>
+			<sub_content_top name="sub_chosen">
+				<anchored height="240" />
+				<class>ccwiz_race_block</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="traits_header">
+				<static textres="ccwiz_header_traits" />
+			</header_content_framed_metalplate>
+			<list_content_noscroll_top name="cards">
+				<class>ccwiz_card</class>
+				<sortby><control>title</control></sortby>
+			</list_content_noscroll_top>
+		</sheetdata>
+	</windowclass>
+
+	<!-- The chosen race: portrait and its numbers. -->
+	<windowclass name="ccwiz_race_block">
+		<script>
+			function setRace(node)
+				name.setValue(DB.getValue(node, "name", ""));
+				local tLines = {};
+				table.insert(tLines, Interface.getString("ccwiz_label_mods") .. ": " .. CCWizard.describeMods(node));
+				local sMove = DB.getValue(node, "speed", "");
+				if sMove ~= "" then
+					table.insert(tLines, Interface.getString("ccwiz_label_move") .. ": " .. sMove);
+				end
+				table.insert(tLines, string.format("Extra primes to choose: %d", DB.getValue(node, "primechoice", 0)));
+				local tLang = CCWizard.getRaceLanguages(node);
+				if #tLang > 0 then
+					table.insert(tLines, "Languages: " .. table.concat(tLang, ", "));
+				end
+				table.insert(tLines, "Source: " .. CCWizard.getSourceName(node));
+				info.setValue(table.concat(tLines, "\n"));
+				CCWizard.setPortrait(portrait, "race", DB.getValue(node, "name", ""));
+			end
+		</script>
+		<sheetdata>
+			<genericcontrol name="portrait">
+				<bounds>10,10,170,220</bounds>
+				<disabled />
+			</genericcontrol>
+			<stringcontrol name="name">
+				<bounds>200,10,-10,30</bounds>
+				<font>reference-h</font>
+				<readonly /><nodrag />
+			</stringcontrol>
+			<stringcontrol name="info">
+				<bounds>200,48,-10,180</bounds>
+				<font>sheettext</font>
+				<multilinespacing>20</multilinespacing>
+				<readonly /><nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== CLASS ============================== -->
+	<windowclass name="ccwiz_page_class">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_class") .. "\r\r" .. Interface.getString("ccwiz_steps_class"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_class");
+				local nodeSel = CCWizard.getClassNode();
+				local bPick = nodeSel == nil;
+				sub_filter.setVisible(bPick);
+				list.setVisible(bPick);
+				sub_chosen.setVisible(not bPick);
+				change.setVisible(not bPick);
+				abilities_header.setVisible(not bPick);
+				cards.setVisible(not bPick);
+				combine_header.setVisible(not bPick);
+				sub_combine.setVisible(not bPick);
+				combos.setVisible(not bPick);
+				picks.setVisible(not bPick);
+				if bPick then
+					header.setValue(Interface.getString("ccwiz_header_classes"));
+					-- Race first: the race decides which classes can be taken.
+					local bRace = CCWizard.getRaceNode() ~= nil;
+					sub_filter.setVisible(bRace);
+					list.setVisible(bRace);
+					needrace.setVisible(not bRace);
+					if bRace then sub_filter.subwindow.setKind("class", "Class"); end
+					list.closeAll();
+					if not bRace then return; end
+					for _, node in ipairs(CCWizard.getPickList("Class", "class")) do
+						list.createWindow().setData(node, "class");
+					end
+					return;
+				end
+				needrace.setVisible(false);
+				header.setValue(DB.getValue(nodeSel, "name", ""):upper());
+				sub_chosen.subwindow.setClass(nodeSel);
+				refreshCombine();
+				cards.closeAll();
+				local nLevel = CCWizard.getStartLevel();
+				for _, v in pairs(DB.getChildren(nodeSel, "abilities")) do
+					local n = tonumber(DB.getValue(v, "level", 1)) or 1;
+					if n &lt;= nLevel then
+						local w = cards.createWindow();
+						w.setData(string.format("(Level %02d)  %s", n, DB.getValue(v, "name", "")), CCWizard.plainText(DB.getValue(v, "text", "")), false);
+					end
+				end
+				cards.applySort();
+			end
+			-- Combining classes (Adventurer's Backpack): chosen ones as cards, and
+			-- the choice list of the option being added.
+			function refreshCombine()
+				if sub_combine.subwindow then sub_combine.subwindow.update(); end
+				combos.closeAll();
+				for _, t in ipairs(CCWizard.describeCombos()) do
+					combos.createWindow().setData(t);
+				end
+				picks.closeAll();
+				local sMode = CCWizard.getPicker();
+				if sMode then
+					for _, t in ipairs(CCWizard.getComboChoices(sMode)) do
+						picks.createWindow().setData(t, sMode);
+					end
+				end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<button_text name="change">
+				<anchored to="header" position="insidetopleft" offset="10,0" width="110" height="20" />
+				<state textres="ccwiz_btn_changeclass" />
+				<script>function onButtonPress() CCWizard.selectClass(nil); end</script>
+			</button_text>
+			<sub_content_top name="sub_filter">
+				<anchored height="66" />
+				<class>ccwiz_filter</class>
+			</sub_content_top>
+			<stringc_content_noframe_noscroll_static_top name="needrace">
+				<anchored><left offset="12" /><right offset="-12" /></anchored>
+				<static textres="ccwiz_msg_racefirst" />
+				<invisible />
+			</stringc_content_noframe_noscroll_static_top>
+			<list_content_noscroll_top name="list">
+				<class>ccwiz_pick_row</class>
+			</list_content_noscroll_top>
+			<sub_content_top name="sub_chosen">
+				<anchored height="260" />
+				<class>ccwiz_class_block</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="abilities_header">
+				<static textres="ccwiz_header_classabilities" />
+			</header_content_framed_metalplate>
+			<list_content_noscroll_top name="cards">
+				<class>ccwiz_card</class>
+				<sortby><control>title</control></sortby>
+			</list_content_noscroll_top>
+			<header_content_framed_metalplate name="combine_header">
+				<static textres="ccwiz_header_combine" />
+			</header_content_framed_metalplate>
+			<list_content_noscroll_top name="combos">
+				<class>ccwiz_combo_card</class>
+			</list_content_noscroll_top>
+			<sub_content_top name="sub_combine">
+				<anchored height="64" />
+				<class>ccwiz_combine_buttons</class>
+			</sub_content_top>
+			<list_content_noscroll_top name="picks">
+				<class>ccwiz_combo_pick_row</class>
+			</list_content_noscroll_top>
+		</sheetdata>
+	</windowclass>
+
+	<!-- The three ways to combine classes at creation, as buttons (Cancel while its list is open). -->
+	<windowclass name="ccwiz_combine_buttons">
+		<script>
+			function update()
+				local bOk, sWhy = CCWizard.canCombine();
+				local C = CCWizard.getCombo();
+				local sPicker = CCWizard.getPicker();
+				note.setValue(bOk and Interface.getString("ccwiz_combine_note") or sWhy);
+				local bOne = C.class2 ~= nil or C.support ~= nil;
+				add_multi.setVisible(bOk and not bOne);
+				add_support.setVisible(bOk and not bOne);
+				add_plus.setVisible(bOk);
+				add_multi.setText(sPicker == "multi" and "Cancel" or Interface.getString("ccwiz_btn_addmulti"));
+				add_support.setText(sPicker == "enhanced" and "Cancel" or Interface.getString("ccwiz_btn_addsupport"));
+				add_plus.setText(sPicker == "plus" and "Cancel" or Interface.getString("ccwiz_btn_addplus"));
+			end
+		</script>
+		<sheetdata>
+			<stringcontrol name="note"><bounds>14,4,-14,22</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+			<button_text name="add_multi">
+				<bounds>14,32,230,26</bounds>
+				<tooltip text="Two classes from 1st level, advancing together (Adventurer's Backpack)" />
+				<script>function onButtonPress() CCWizard.setPicker("multi"); end</script>
+			</button_text>
+			<button_text name="add_support">
+				<bounds>254,32,270,26</bounds>
+				<tooltip text="Some abilities of another class, at half the rate (Adventurer's Backpack)" />
+				<script>function onButtonPress() CCWizard.setPicker("enhanced"); end</script>
+			</button_text>
+			<button_text name="add_plus">
+				<bounds>534,32,210,26</bounds>
+				<tooltip text="Zero-level abilities of another class, 5% of experience each (Adventurer's Backpack)" />
+				<script>function onButtonPress() CCWizard.setPicker("plus"); end</script>
+			</button_text>
+		</sheetdata>
+	</windowclass>
+
+	<!-- A chosen combination: title, what it means, Remove. -->
+	<windowclass name="ccwiz_combo_card">
+		<margins control="0,0,0,6" />
+		<frame>groupbox</frame>
+		<script>
+			local _sMode, _sPath = "", "";
+			function setData(t)
+				_sMode, _sPath = t.mode, t.path;
+				title.setValue(t.title);
+				text.setValue(t.text);
+			end
+			function onRemove()
+				CCWizard.removeCombo(_sMode, _sPath);
+			end
+		</script>
+		<sheetdata>
+			<anchor_content_top>
+				<anchored>
+					<top offset="9" />
+					<left offset="16" />
+					<right offset="-16" />
+				</anchored>
+			</anchor_content_top>
+			<stringcontrol name="title">
+				<anchored to="contentanchor" height="20">
+					<top relation="relative" offset="0" postoffset="2" />
+					<left />
+					<right offset="-90" />
+				</anchored>
+				<font>reference-b</font>
+				<readonly /><nodrag />
+			</stringcontrol>
+			<button_text_sm name="remove">
+				<anchored to="title" position="righthigh" offset="6,0" width="80" height="20" />
+				<state text="Remove" />
+				<script>function onButtonPress() window.onRemove(); end</script>
+			</button_text_sm>
+			<stringc_content_noframe_noscroll_static_top name="text" />
+			<spacer_content_top name="spacer" />
+		</sheetdata>
+	</windowclass>
+
+	<!-- One row of a combining choice list: +, name, table letter and rule, source. -->
+	<windowclass name="ccwiz_combo_pick_row">
+		<margins control="0,0,0,4" />
+		<frame>groupbox</frame>
+		<script>
+			local _t, _sMode = nil, "";
+			function setData(t, sMode)
+				_t, _sMode = t, sMode;
+				name.setValue(t.name);
+				code.setValue(t.code ~= "" and ("[" .. t.code .. "]") or "");
+				rule.setValue(t.rule);
+				source.setValue(t.source or "");
+				add.setVisible(t.allowed);
+			end
+			function onAdd()
+				CCWizard.chooseCombo(_sMode, _t.path, _t.key);
+			end
+			function onOpen()
+				CCWizard.openRecord(_t.path);
+			end
+		</script>
+		<sheetdata>
+			<buttoncontrol name="add">
+				<bounds>8,5,20,20</bounds>
+				<icon normal="button_add" />
+				<tooltip text="Add" />
+				<script>function onButtonPress() window.onAdd(); end</script>
+			</buttoncontrol>
+			<buttoncontrol name="link">
+				<bounds>32,5,20,20</bounds>
+				<icon normal="button_link" />
+				<tooltip text="Read the class" />
+				<script>function onButtonPress() window.onOpen(); end</script>
+			</buttoncontrol>
+			<stringcontrol name="name"><bounds>58,5,230,20</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="code"><bounds>292,5,50,20</bounds><font>reference-b</font><center /><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="rule"><bounds>346,5,-220,38</bounds><font>sheettext</font><multilinespacing>18</multilinespacing><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="source"><bounds>-214,5,-10,20</bounds><font>sheetlabel</font><center /><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- The chosen class: portrait, Level with arrows (the starting level), and its numbers. -->
+	<windowclass name="ccwiz_class_block">
+		<script>
+			function setClass(node)
+				local nLevel = CCWizard.getStartLevel();
+				name.setValue(DB.getValue(node, "name", ""));
+				level.setValue(nLevel);
+				local tLines = {};
+				if not CCWizard.hasSupportedLevel() then
+					table.insert(tLines, CCWizard.getUnsupportedLevelMessage());
+				end
+				local sPrime = CCWizard.getClassPrime();
+				table.insert(tLines, Interface.getString("ccwiz_label_prime") .. ": " .. (sPrime and StringManager.capitalize(sPrime) or "-"));
+				table.insert(tLines, Interface.getString("ccwiz_label_hitdie") .. ": " .. DB.getValue(node, "hitdie", "-"));
+				local nodeRow = CCWizard.getExactLevelRow(node, nLevel);
+				if nodeRow and not CCWizard.requiresManualProgression() then
+					table.insert(tLines, string.format("%s: %+d", Interface.getString("ccwiz_label_bth"), DB.getValue(nodeRow, "bth", 0)));
+					table.insert(tLines, "Hit dice at this level: " .. DB.getValue(nodeRow, "hd", ""));
+				elseif CCWizard.requiresManualProgression() then
+					table.insert(tLines, Interface.getString("ccwiz_label_manualrequired"));
+				end
+				local sGold = DB.getValue(node, "startgold", "");
+				if sGold ~= "" then
+					table.insert(tLines, Interface.getString("ccwiz_label_gold") .. ": " .. sGold:gsub("x", " x ") .. " gp");
+				end
+				table.insert(tLines, "Source: " .. CCWizard.getSourceName(node));
+				info.setValue(table.concat(tLines, "\n"));
+				CCWizard.setPortrait(portrait, "class", DB.getValue(node, "name", ""));
+			end
+			function changeLevel(nDelta)
+				CCWizard.setStartLevel(CCWizard.getStartLevel() + nDelta);
+				CCWizard.refreshAll();
+			end
+		</script>
+		<sheetdata>
+			<genericcontrol name="portrait">
+				<bounds>10,10,190,240</bounds>
+				<disabled />
+			</genericcontrol>
+			<stringcontrol name="name">
+				<bounds>220,10,-200,30</bounds>
+				<font>reference-h</font>
+				<readonly /><nodrag />
+			</stringcontrol>
+			<label><bounds>-170,14,50,22</bounds><static textres="ccwiz_label_level" /></label>
+			<numbercontrol name="level">
+				<bounds>-116,14,40,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheetnumber</font>
+				<center />
+				<readonly />
+				<nodrag />
+			</numbercontrol>
+			<buttoncontrol name="level_up">
+				<bounds>-66,10,20,15</bounds>
+				<icon normal="arrow_sm_up" />
+				<tooltip text="Higher starting level" />
+				<script>function onButtonPress() window.changeLevel(1); end</script>
+			</buttoncontrol>
+			<buttoncontrol name="level_down">
+				<bounds>-66,26,20,15</bounds>
+				<icon normal="arrow_sm_down" />
+				<tooltip text="Lower starting level" />
+				<script>function onButtonPress() window.changeLevel(-1); end</script>
+			</buttoncontrol>
+			<stringcontrol name="info">
+				<bounds>220,48,-10,200</bounds>
+				<font>sheettext</font>
+				<multilinespacing>20</multilinespacing>
+				<readonly /><nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== PRIMES ============================== -->
+	<windowclass name="ccwiz_page_primes">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				header.setValue(Interface.getString("ccwiz_head_primes"));
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_primes") .. "\r\r" .. Interface.getString("ccwiz_steps_primes"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_primes");
+				if sub_panel.subwindow then sub_panel.subwindow.onPageShow(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<sub_content_top name="sub_panel">
+				<anchored height="280" />
+				<class>ccwiz_panel_primes</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_primes">
+		<script>
+			local STATS = { "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma" };
+			local _bUpdating = false;
+			function onInit()
+				onPageShow();
+			end
+			function isUpdating()
+				return _bUpdating;
+			end
+			function onPageShow()
+				if _bUpdating then
+					return;
+				end
+				_bUpdating = true;
+				local S = CCWizard.getState();
+				for _, s in ipairs(STATS) do
+					local sForced = CCWizard.isForcedPrime(s);
+					local c = self["prime_" .. s];
+					c.setValue((sForced or S.primes[s]) and 1 or 0);
+					c.setReadOnly(sForced ~= nil);
+					local nScore = CCWizard.getFinalScore(s);
+					self["note_" .. s].setValue((nScore and tostring(nScore) or "-") .. (sForced and ("   (" .. sForced .. ")") or ""));
+				end
+				local nChosen, nAllowed = CCWizard.getPrimeCounts();
+				count.setValue(string.format(Interface.getString("ccwiz_primes_count"), nChosen, nAllowed));
+				_bUpdating = false;
+			end
+		</script>
+		<sheetdata>
+			<stringcontrol name="count"><bounds>60,8,400,24</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_strength"><bounds>60,44,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("strength", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,44,130,24</bounds><static>Strength</static></label>
+			<stringcontrol name="note_strength"><bounds>230,44,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_dexterity"><bounds>60,84,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("dexterity", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,84,130,24</bounds><static>Dexterity</static></label>
+			<stringcontrol name="note_dexterity"><bounds>230,84,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_constitution"><bounds>60,124,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("constitution", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,124,130,24</bounds><static>Constitution</static></label>
+			<stringcontrol name="note_constitution"><bounds>230,124,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_intelligence"><bounds>60,164,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("intelligence", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,164,130,24</bounds><static>Intelligence</static></label>
+			<stringcontrol name="note_intelligence"><bounds>230,164,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_wisdom"><bounds>60,204,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("wisdom", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,204,130,24</bounds><static>Wisdom</static></label>
+			<stringcontrol name="note_wisdom"><bounds>230,204,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+
+			<buttonc_checkbox name="prime_charisma"><bounds>60,244,24,24</bounds><script>function onValueChanged() if not window.isUpdating() then CCWizard.togglePrime("charisma", getValue() == 1); end end</script></buttonc_checkbox>
+			<label><bounds>95,244,130,24</bounds><static>Charisma</static></label>
+			<stringcontrol name="note_charisma"><bounds>230,244,300,24</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================ HIT POINTS ============================ -->
+	<windowclass name="ccwiz_page_hp">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				header.setValue(Interface.getString("ccwiz_head_hp"));
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_hp") .. "\r\r" .. Interface.getString("ccwiz_steps_hp"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_hp");
+				if sub_panel.subwindow then sub_panel.subwindow.onPageShow(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<sub_content_top name="sub_panel">
+				<anchored height="520" />
+				<class>ccwiz_panel_hp</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_hp">
+		<script>
+			function onInit()
+				onPageShow();
+			end
+			function onPageShow()
+				local S = CCWizard.getState();
+				local tLines = {};
+				local nCon = CCWizard.getConMod();
+				local bManual = CCWizard.requiresManualProgression();
+				roll.setVisible(not bManual);
+				manual_note.setVisible(bManual);
+				manual_hp_label.setVisible(bManual);
+				entry_manualhp.setVisible(bManual);
+				manual_bth_label.setVisible(bManual);
+				entry_manualbth.setVisible(bManual);
+				if bManual then
+					manual_note.setValue(CCWizard.getUnsupportedLevelMessage());
+					entry_manualhp.setValue(S.manualhp or "");
+					entry_manualbth.setValue(S.manualbth or "");
+				end
+				for _, r in ipairs(CCWizard.getHPPlan()) do
+					local sDice = (#r.dice > 0) and ("1" .. r.dice[1] .. (#r.dice > 1 and (" x" .. #r.dice) or "")) or "";
+					if #r.dice > 0 and nCon ~= 0 then
+						sDice = sDice .. string.format(" %+d Con", nCon);
+					end
+					if r.flat > 0 then
+						sDice = sDice .. (sDice ~= "" and " " or "") .. string.format("+%d", r.flat);
+					end
+					table.insert(tLines, string.format("%s:   %s   %s", string.format(Interface.getString("ccwiz_hp_level"), r.level),
+						sDice, S.hp[r.level] and ("= " .. S.hp[r.level]) or ""));
+				end
+				if #tLines == 0 then
+					table.insert(tLines, bManual and Interface.getString("ccwiz_label_manualrequired") or Interface.getString("ccwiz_msg_noclass"));
+				end
+				if S.hpnotice then table.insert(tLines, 1, S.hpnotice); end
+				plan.setValue(table.concat(tLines, "\n"));
+				total.setValue(string.format(Interface.getString("ccwiz_hp_total"), CCWizard.getSelectedHPTotal()));
+			end
+		</script>
+		<sheetdata>
+			<button_text name="roll">
+				<bounds>60,10,180,28</bounds>
+				<state textres="ccwiz_btn_rollhp" />
+				<script>function onButtonPress() CCWizard.rollHP(); end</script>
+			</button_text>
+			<stringcontrol name="manual_note"><bounds>60,10,-24,38</bounds><font>sheettext</font><multilinespacing>18</multilinespacing><readonly /><nodrag /></stringcontrol>
+			<label name="manual_hp_label"><bounds>60,54,150,24</bounds><static textres="ccwiz_label_manualhp" /></label>
+			<ccwiz_entry name="entry_manualhp"><bounds>220,54,120,24</bounds></ccwiz_entry>
+			<label name="manual_bth_label"><bounds>370,54,150,24</bounds><static textres="ccwiz_label_manualbth" /></label>
+			<ccwiz_entry name="entry_manualbth"><bounds>530,54,120,24</bounds></ccwiz_entry>
+			<stringcontrol name="total"><bounds>270,12,400,24</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="plan">
+				<bounds>60,60,-24,-10</bounds>
+				<font>sheettext</font>
+				<multilinespacing>22</multilinespacing>
+				<readonly /><nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================ EQUIPMENT ============================ -->
+	<windowclass name="ccwiz_shop_row">
+		<margins control="0,0,0,2" />
+		<script>
+			local _node = nil;
+			function setData(node)
+				_node = node;
+				name.setValue(DB.getValue(node, "name", ""));
+				cost.setValue(DB.getValue(node, "cost", ""));
+			end
+			function onBuy()
+				CCWizard.buy(_node);
+			end
+			function onOpen()
+				Interface.openWindow("item", DB.getPath(_node));
+			end
+		</script>
+		<sheetdata>
+			<buttoncontrol name="buy">
+				<bounds>4,2,20,20</bounds>
+				<icon normal="button_add" />
+				<tooltip text="Buy" />
+				<script>function onButtonPress() window.onBuy(); end</script>
+			</buttoncontrol>
+			<buttoncontrol name="link">
+				<bounds>28,2,20,20</bounds>
+				<icon normal="button_link" />
+				<tooltip text="Read the item" />
+				<script>function onButtonPress() window.onOpen(); end</script>
+			</buttoncontrol>
+			<stringcontrol name="name">
+				<bounds>54,2,-90,20</bounds>
+				<font>sheettext</font>
+				<readonly />
+				<script>function onDoubleClick() window.onOpen(); return true; end</script>
+			</stringcontrol>
+			<stringcontrol name="cost"><bounds>-86,2,80,20</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_cart_row">
+		<margins control="0,0,0,2" />
+		<script>
+			local _sPath = "";
+			function setData(t)
+				_sPath = t.path;
+				name.setValue(t.name .. (t.count > 1 and (" x" .. t.count) or ""));
+				cost.setValue(CCWizard.formatCopper(t.cost * t.count));
+			end
+			function onReturn()
+				CCWizard.unbuy(_sPath);
+			end
+		</script>
+		<sheetdata>
+			<button_text_sm name="remove">
+				<bounds>10,2,56,20</bounds>
+				<state textres="ccwiz_btn_remove" />
+				<script>function onButtonPress() window.onReturn(); end</script>
+			</button_text_sm>
+			<stringcontrol name="name"><bounds>72,2,-100,20</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="cost"><bounds>-96,2,86,20</bounds><font>sheettext</font><readonly /><nodrag /></stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_page_equipment">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_equipment") .. "\r\r" .. Interface.getString("ccwiz_steps_equipment"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_equipment");
+				if sub_coin.subwindow then sub_coin.subwindow.onPageShow(); end
+				if sub_shop.subwindow then sub_shop.subwindow.refreshShop(); end
+				local S = CCWizard.getState();
+				cart.closeAll();
+				for _, t in ipairs(S.cart) do
+					cart.createWindow().setData(t);
+				end
+				cart_empty.setVisible(#S.cart == 0);
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="coin_header"><static textres="ccwiz_header_coin" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_coin">
+				<anchored height="44" />
+				<class>ccwiz_panel_coin</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="cart_header"><static textres="ccwiz_header_cart" /></header_content_framed_metalplate>
+			<list_content_noscroll_top name="cart">
+				<class>ccwiz_cart_row</class>
+			</list_content_noscroll_top>
+			<stringc_content_noframe_noscroll_static_top name="cart_empty">
+				<anchored><left offset="12" /></anchored>
+				<static>Nothing bought yet.</static>
+			</stringc_content_noframe_noscroll_static_top>
+			<header_content_framed_metalplate name="shop_header"><static textres="ccwiz_header_shop" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_shop">
+				<anchored height="460" />
+				<class>ccwiz_panel_shop</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_coin">
+		<script>
+			function onInit()
+				onPageShow();
+			end
+			function onPageShow()
+				local S = CCWizard.getState();
+				if S.gold then
+					purse.setValue(S.gold .. " gp");
+					spent.setValue(CCWizard.formatCopper(CCWizard.getSpent()));
+					left.setValue(CCWizard.formatCopper(CCWizard.getLeft()));
+				else
+					purse.setValue("-");
+					spent.setValue("-");
+					left.setValue("-");
+				end
+			end
+		</script>
+		<sheetdata>
+			<button_text name="rollgold">
+				<bounds>24,8,180,26</bounds>
+				<state textres="ccwiz_btn_rollgold" />
+				<script>function onButtonPress() CCWizard.rollGold(); end</script>
+			</button_text>
+			<label><bounds>230,10,50,22</bounds><static textres="ccwiz_label_purse" /></label>
+			<ccwiz_value name="purse"><bounds>285,10,90,22</bounds></ccwiz_value>
+			<label><bounds>395,10,50,22</bounds><static textres="ccwiz_label_spent" /></label>
+			<ccwiz_value name="spent"><bounds>450,10,130,22</bounds></ccwiz_value>
+			<label><bounds>600,10,40,22</bounds><static textres="ccwiz_label_left" /></label>
+			<ccwiz_value name="left"><bounds>645,10,130,22</bounds></ccwiz_value>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_shop">
+		<script>
+			local _sCategory = "all";
+			function onInit()
+				for _, t in ipairs({ { "all", "ccwiz_cat_all" }, { "weapon", "ccwiz_cat_weapon" }, { "armor", "ccwiz_cat_armor" },
+						{ "gear", "ccwiz_cat_gear" }, { "clothing", "ccwiz_cat_clothing" }, { "provisions", "ccwiz_cat_provisions" },
+						{ "transport", "ccwiz_cat_transport" } }) do
+					category.add(t[1], Interface.getString(t[2]));
+				end
+				category.setValue("all");
+				refreshShop();
+			end
+			function setCategory(s)
+				_sCategory = s or "all";
+				refreshShop();
+			end
+			function refreshShop()
+				shop.closeAll();
+				local tItems = CCWizard.getShopItems(_sCategory, search.getValue());
+				for _, node in ipairs(tItems) do
+					shop.createWindow().setData(node);
+				end
+				if not CCWizard.getClassNode() then
+					shopnote.setValue(Interface.getString("ccwiz_shop_classfirst"));
+				elseif not CCWizard.getState().gold then
+					shopnote.setValue(Interface.getString("ccwiz_shop_rollfirst"));
+				elseif #tItems == 0 then
+					shopnote.setValue(Interface.getString("ccwiz_shop_nothing"));
+				else
+					shopnote.setValue("");
+				end
+				shopnote.setVisible(shopnote.getValue() ~= "");
+			end
+		</script>
+		<sheetdata>
+			<label><bounds>24,8,60,22</bounds><static textres="ccwiz_label_shop" /></label>
+			<comboboxc name="category">
+				<bounds>80,8,230,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<listdirection>down</listdirection>
+				<unsorted />
+				<script>function onSelect(sValue) window.setCategory(sValue); end</script>
+			</comboboxc>
+			<label><bounds>325,8,55,22</bounds><static textres="ccwiz_label_search" /></label>
+			<stringcontrol name="search">
+				<bounds>385,8,220,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<script>function onValueChanged() window.refreshShop(); end</script>
+			</stringcontrol>
+			<windowlist name="shop">
+				<bounds>24,44,-34,-10</bounds>
+				<frame name="groupbox" offset="10,10,10,10" />
+				<class>ccwiz_shop_row</class>
+				<columns width="440" fillwidth="true" />
+				<skipempty />
+			</windowlist>
+			<scrollbar><anchored to="shop" /><target>shop</target></scrollbar>
+			<stringcontrol name="shopnote">
+				<bounds>44,64,486,60</bounds>
+				<font>reference-b</font>
+				<multilinespacing>18</multilinespacing>
+				<readonly /><nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== SPELLS ============================== -->
+	<windowclass name="ccwiz_spell_row">
+		<margins control="0,0,0,2" />
+		<script>
+			local _sPath = "";
+			local _bSetting = false;
+			function setData(t, bOn)
+				_sPath = DB.getPath(t.node);
+				level.setValue(tostring(t.level));
+				name.setValue(DB.getValue(t.node, "name", ""));
+				_bSetting = true;
+				pick.setValue(bOn and 1 or 0);
+				_bSetting = false;
+			end
+			function onPick(bOn)
+				if _bSetting then
+					return;
+				end
+				if CCWizard.toggleSpell(_sPath, bOn) == false then
+					_bSetting = true;
+					pick.setValue(0);
+					_bSetting = false;
+				end
+				windowlist.window.updateCount();
+			end
+			function onOpen()
+				Interface.openWindow("spell", DB.getValue(_sPath .. ".officialpath", _sPath));
+			end
+		</script>
+		<sheetdata>
+			<buttonc_checkbox name="pick">
+				<bounds>4,2,20,20</bounds>
+				<script>function onValueChanged() window.onPick(getValue() == 1); end</script>
+			</buttonc_checkbox>
+			<stringcontrol name="level"><bounds>30,2,24,20</bounds><font>sheettext</font><center /><readonly /><nodrag /></stringcontrol>
+			<stringcontrol name="name">
+				<bounds>60,2,-4,20</bounds>
+				<font>sheettext</font>
+				<readonly />
+				<script>function onDoubleClick() window.onOpen(); return true; end</script>
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_page_spells">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				header.setValue(Interface.getString("ccwiz_head_spells"));
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_spells") .. "\r\r" .. Interface.getString("ccwiz_steps_spells"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_spells");
+				if sub_panel.subwindow then sub_panel.subwindow.onPageShow(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="header" />
+			<sub_content_top name="sub_panel">
+				<anchored height="560" />
+				<class>ccwiz_panel_spells</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_spells">
+		<script>
+			local _nLevel = nil;
+			function onInit()
+				onPageShow();
+			end
+			function updateCount()
+				local sPicks = CCWizard.describeSpellPicks();
+				chosen.setValue(string.format(Interface.getString("ccwiz_spells_chosen"), sPicks));
+			end
+			function setLevel(s)
+				_nLevel = tonumber(s);
+				refreshList();
+			end
+			function buildLevels()
+				levelfilter.clear();
+				levelfilter.add("all", Interface.getString("ccwiz_spells_alllevels"));
+				for i = 0, CCWizard.getMaxSpellLevel() do
+					levelfilter.add(tostring(i), i == 0 and Interface.getString("ccwiz_spells_level0") or string.format(Interface.getString("ccwiz_spells_leveln"), i));
+				end
+				if not _nLevel or _nLevel > CCWizard.getMaxSpellLevel() then
+					_nLevel = nil;
+				end
+				levelfilter.setValue(_nLevel and tostring(_nLevel) or "all");
+			end
+			function refreshList()
+				local tPicks = CCWizard.getSpellPicks();
+				list.closeAll();
+				for _, t in ipairs(CCWizard.getSpellChoices(search.getValue(), _nLevel)) do
+					list.createWindow().setData(t, tPicks[DB.getPath(t.node)] ~= nil);
+				end
+				updateCount();
+			end
+			-- Two spell lists (combined classes): a button for each, as the
+			-- 5e wizard's Features / Spells toggles.
+			function updateSets()
+				local bTwo = CCWizard.hasSecondSpells();
+				set_main.setVisible(bTwo);
+				set_second.setVisible(bTwo);
+				if bTwo then
+					local sSet = CCWizard.getSpellSet();
+					set_main.setText(CCWizard.getMainSpellClass() ~= "" and CCWizard.getMainSpellClass() or CCWizard.getClassName());
+					set_second.setText(CCWizard.getSecondSpellClass());
+					set_main.setFrame(sSet == "main" and "buttondown" or "buttonup", 5, 5, 5, 5);
+					set_second.setFrame(sSet == "second" and "buttondown" or "buttonup", 5, 5, 5, 5);
+				end
+			end
+			function onPageShow()
+				updateSets();
+				if CCWizard.getSpellClass() == "" then
+					perday.setValue(Interface.getString("ccwiz_spells_none"));
+					list.closeAll();
+					chosen.setValue("");
+					return;
+				end
+				local tDay = CCWizard.getSpellsPerDay();
+				local tParts = {};
+				for i = 0, 9 do
+					if tDay[i] and tDay[i] > 0 then
+						table.insert(tParts, string.format("%s: %d", i == 0 and "0-level" or ("level " .. i), tDay[i]));
+					end
+				end
+				perday.setValue(string.format(Interface.getString("ccwiz_spells_perday"), CCWizard.getStartLevel(), table.concat(tParts, ", ")));
+				buildLevels();
+				refreshList();
+			end
+		</script>
+		<sheetdata>
+			<stringcontrol name="perday"><bounds>24,8,-360,22</bounds><font>reference-b</font><readonly /><nodrag /></stringcontrol>
+			<button_text name="set_main">
+				<bounds>-344,6,160,24</bounds>
+				<invisible />
+				<script>function onButtonPress() CCWizard.setSpellSet("main"); end</script>
+			</button_text>
+			<button_text name="set_second">
+				<bounds>-178,6,160,24</bounds>
+				<invisible />
+				<script>function onButtonPress() CCWizard.setSpellSet("second"); end</script>
+			</button_text>
+			<stringcontrol name="chosen"><bounds>24,36,-24,66</bounds><font>sheettext</font><multilinespacing>20</multilinespacing><readonly /><nodrag /></stringcontrol>
+			<label><bounds>24,110,55,22</bounds><static textres="ccwiz_label_search" /></label>
+			<stringcontrol name="search">
+				<bounds>85,110,200,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<script>function onValueChanged() window.refreshList(); end</script>
+			</stringcontrol>
+			<label><bounds>305,110,45,22</bounds><static textres="ccwiz_label_level" /></label>
+			<comboboxc name="levelfilter">
+				<bounds>355,110,150,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<listdirection>down</listdirection>
+				<unsorted />
+				<script>function onSelect(sValue) window.setLevel(sValue); end</script>
+			</comboboxc>
+			<windowlist name="list">
+				<bounds>24,144,-34,-10</bounds>
+				<frame name="groupbox" offset="10,10,10,10" />
+				<class>ccwiz_spell_row</class>
+				<columns width="310" fillwidth="true" />
+				<skipempty />
+			</windowlist>
+			<scrollbar><anchored to="list" /><target>list</target></scrollbar>
+		</sheetdata>
+	</windowclass>
+
+	<!-- ============================== FINISH ============================== -->
+	<!-- As the 5e Commit page: warnings first, then details, then Create, then the summary. -->
+	<windowclass name="ccwiz_page_finish">
+		<margins control="0,0,0,10" />
+		<script>
+			function onInit()
+				sub_instructions.subwindow.setText(Interface.getString("ccwiz_lore_finish") .. "\r\r" .. Interface.getString("ccwiz_steps_finish"));
+				onPageShow();
+			end
+			function onPageShow()
+				CCWizard.applyWallpaper(wallpaper, "ccwiz_art_finish");
+				updateSummary();
+			end
+			function updateSummary()
+				local tWarnings = CCWizard.getAllWarnings();
+				warnings.closeAll();
+				for _, s in ipairs(tWarnings) do
+					warnings.createWindow().text.setValue(s);
+				end
+				nowarnings.setVisible(#tWarnings == 0);
+				if sub_details.subwindow and sub_details.subwindow.refreshAlignments then sub_details.subwindow.refreshAlignments(); end
+				if sub_save.subwindow then sub_save.subwindow.update(); end
+				if sub_summary.subwindow then sub_summary.subwindow.update(); end
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_wallpaper />
+			<anchor_content_top />
+			<sub_content_top name="sub_instructions"><class>ccwiz_instructions</class></sub_content_top>
+			<header_content_framed_metalplate name="warnings_header"><static textres="ccwiz_header_warnings" /></header_content_framed_metalplate>
+			<list_content_noscroll_top name="warnings">
+				<class>ccwiz_warning_row</class>
+			</list_content_noscroll_top>
+			<stringc_content_noframe_noscroll_static_top name="nowarnings">
+				<anchored><left offset="12" /></anchored>
+				<static textres="ccwiz_msg_nowarnings" />
+			</stringc_content_noframe_noscroll_static_top>
+			<header_content_framed_metalplate name="details_header"><static textres="ccwiz_header_details" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_details">
+				<anchored height="230" />
+				<class>ccwiz_panel_details</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="save_header"><static textres="ccwiz_header_save" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_save">
+				<anchored height="50" />
+				<class>ccwiz_panel_save</class>
+			</sub_content_top>
+			<header_content_framed_metalplate name="summary_header"><static textres="ccwiz_header_summary" /></header_content_framed_metalplate>
+			<sub_content_top name="sub_summary">
+				<anchored height="220" />
+				<class>ccwiz_panel_summary</class>
+			</sub_content_top>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_details">
+		<script>
+			function onInit()
+				refreshAlignments();
+			end
+			-- Only the alignments the chosen classes allow (the C&amp;C class entries).
+			function refreshAlignments()
+				local S = CCWizard.getState();
+				local tAllowed, sRules = CCWizard.getAllowedAlignments();
+				local sSig = table.concat(tAllowed, "|");
+				if sSig ~= _sAlignSig then
+					_sAlignSig = sSig;
+					alignment.clear();
+					for _, s in ipairs(tAllowed) do
+						alignment.add(s, s);
+					end
+				end
+				if not CCWizard.isAlignmentValid() then
+					S.alignment = "";
+				end
+				alignment.setValue(S.alignment or "");
+				alignment.setTooltipText(sRules ~= "" and string.format(Interface.getString("ccwiz_label_alignrule"), sRules) or "");
+			end
+			function updateSummary()
+				local wPage = parentcontrol and parentcontrol.window;
+				if wPage and wPage.updateSummary then
+					wPage.updateSummary();
+				end
+			end
+		</script>
+		<sheetdata>
+			<label><bounds>24,8,100,22</bounds><static textres="ccwiz_label_name" /></label>
+			<ccwiz_entry name="entry_name"><bounds>130,8,360,22</bounds></ccwiz_entry>
+			<label><bounds>520,8,90,22</bounds><static textres="ccwiz_label_alignment" /></label>
+			<comboboxc name="alignment">
+				<bounds>615,8,-24,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<listdirection>down</listdirection>
+				<unsorted />
+				<script>function onSelect(sValue) CCWizard.getState().alignment = sValue; CCWizard.updateTabs(); window.updateSummary(); end</script>
+			</comboboxc>
+
+			<label><bounds>24,42,100,22</bounds><static textres="ccwiz_label_deity" /></label>
+			<ccwiz_entry name="entry_deity"><bounds>130,42,360,22</bounds></ccwiz_entry>
+			<label><bounds>520,42,90,22</bounds><static textres="ccwiz_label_gender" /></label>
+			<ccwiz_entry name="entry_gender"><bounds>615,42,-24,22</bounds></ccwiz_entry>
+
+			<label><bounds>24,76,100,22</bounds><static textres="ccwiz_label_age" /></label>
+			<ccwiz_entry name="entry_age"><bounds>130,76,100,22</bounds></ccwiz_entry>
+			<label><bounds>250,76,60,22</bounds><static textres="ccwiz_label_height" /></label>
+			<ccwiz_entry name="entry_height"><bounds>315,76,100,22</bounds></ccwiz_entry>
+			<label><bounds>435,76,60,22</bounds><static textres="ccwiz_label_weight" /></label>
+			<ccwiz_entry name="entry_weight"><bounds>500,76,100,22</bounds></ccwiz_entry>
+
+			<label><bounds>24,110,100,22</bounds><static textres="ccwiz_label_appearance" /></label>
+			<ccwiz_entry name="entry_appearance"><bounds>130,110,-24,22</bounds></ccwiz_entry>
+			<label><bounds>24,144,100,22</bounds><static textres="ccwiz_label_notes" /></label>
+			<ccwiz_entry name="entry_notes">
+				<bounds>130,144,-24,76</bounds>
+				<multilinespacing>18</multilinespacing>
+			</ccwiz_entry>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_save">
+		<script>
+			function update()
+				-- Always available: an unfinished character is saved with
+				-- its open choices in the notes (CCWizard.createCharacter).
+				create.setEnabled(true);
+			end
+		</script>
+		<sheetdata>
+			<button_text name="create">
+				<bounds>24,8,220,32</bounds>
+				<state textres="ccwiz_btn_create" />
+				<script>function onButtonPress() CCWizard.createCharacter(); end</script>
+			</button_text>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_panel_summary">
+		<script>
+			local STATS = { "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma" };
+			function update()
+				local S = CCWizard.getState();
+				local nodeRace, nodeClass = CCWizard.getRaceNode(), CCWizard.getClassNode();
+				for _, s in ipairs(STATS) do
+					local n = CCWizard.getFinalScore(s);
+					local bPrime = CCWizard.isForcedPrime(s) or S.primes[s];
+					self["total_" .. s].setValue(n and tostring(n) or "");
+					self["mod_" .. s].setValue(n and string.format("%+d", CCWizard.getModifier(n)) or "");
+					self["prime_" .. s].setVisible(bPrime and true or false);
+				end
+				local tLines = {};
+				table.insert(tLines, string.format("Name: %s      Alignment: %s", StringManager.trim(S.name or "") ~= "" and S.name or "-", (S.alignment or "") ~= "" and S.alignment or "-"));
+				table.insert(tLines, string.format("Race: %s      Class: %s %d", nodeRace and DB.getValue(nodeRace, "name", "") or "-",
+					nodeClass and DB.getValue(nodeClass, "name", "") or "-", CCWizard.getStartLevel()));
+				table.insert(tLines, string.format("Hit points: %d      Coin left: %s      Items: %d      Spells: %d",
+					CCWizard.getSelectedHPTotal(), S.gold and CCWizard.formatCopper(CCWizard.getLeft()) or "-", #S.cart, CCWizard.countSpells()));
+				summary.setValue(table.concat(tLines, "\n"));
+			end
+		</script>
+		<sheetdata>
+			<ccwiz_badge_label><bounds>110,6,86,18</bounds><static>STR</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>240,6,86,18</bounds><static>DEX</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>370,6,86,18</bounds><static>CON</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>500,6,86,18</bounds><static>INT</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>630,6,86,18</bounds><static>WIS</static></ccwiz_badge_label>
+			<ccwiz_badge_label><bounds>760,6,86,18</bounds><static>CHA</static></ccwiz_badge_label>
+			<ccwiz_badge_total name="total_strength"><bounds>110,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_dexterity"><bounds>240,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_constitution"><bounds>370,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_intelligence"><bounds>500,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_wisdom"><bounds>630,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_total name="total_charisma"><bounds>760,26,86,40</bounds></ccwiz_badge_total>
+			<ccwiz_badge_mod name="mod_strength"><bounds>128,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_dexterity"><bounds>258,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_constitution"><bounds>388,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_intelligence"><bounds>518,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_wisdom"><bounds>648,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_badge_mod name="mod_charisma"><bounds>778,70,50,18</bounds></ccwiz_badge_mod>
+			<ccwiz_prime_mark name="prime_strength"><bounds>178,26,18,18</bounds></ccwiz_prime_mark>
+			<ccwiz_prime_mark name="prime_dexterity"><bounds>308,26,18,18</bounds></ccwiz_prime_mark>
+			<ccwiz_prime_mark name="prime_constitution"><bounds>438,26,18,18</bounds></ccwiz_prime_mark>
+			<ccwiz_prime_mark name="prime_intelligence"><bounds>568,26,18,18</bounds></ccwiz_prime_mark>
+			<ccwiz_prime_mark name="prime_wisdom"><bounds>698,26,18,18</bounds></ccwiz_prime_mark>
+			<ccwiz_prime_mark name="prime_charisma"><bounds>828,26,18,18</bounds></ccwiz_prime_mark>
+			<stringcontrol name="summary">
+				<bounds>24,100,-24,110</bounds>
+				<font>sheettext</font>
+				<multilinespacing>24</multilinespacing>
+				<readonly /><nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+</root>

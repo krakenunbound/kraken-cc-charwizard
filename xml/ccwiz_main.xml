@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+	<!-- Launch button on the character selection window (GM and players) -->
+	<windowclass name="charselect_host" merge="join">
+		<sheetdata>
+			<button_icon name="ccwiz_launch" insertbefore="filter">
+				<anchored to="contentanchor" position="aboveleft" offset="5,0" width="32" height="32" />
+				<icon normal="ccwiz_icon" />
+				<tooltip textres="ccwiz_tooltip" />
+				<script>
+					function onButtonPress()
+						Interface.openWindow("ccwizard", "");
+					end
+				</script>
+			</button_icon>
+		</sheetdata>
+	</windowclass>
+	<windowclass name="charselect_client" merge="join">
+		<sheetdata>
+			<button_icon name="ccwiz_launch" insertbefore="filter">
+				<anchored to="contentanchor" position="aboveleft" offset="5,0" width="32" height="32" />
+				<icon normal="ccwiz_icon" />
+				<tooltip textres="ccwiz_tooltip" />
+				<script>
+					function onButtonPress()
+						Interface.openWindow("ccwizard", "");
+						window.close();
+					end
+				</script>
+			</button_icon>
+		</sheetdata>
+	</windowclass>
+
+	<!-- The wizard -->
+	<windowclass name="ccwizard">
+		<frame>utilitybox</frame>
+		<placement>
+			<size width="1040" height="820" />
+		</placement>
+		<sizelimits>
+			<minimum width="1000" height="760" />
+			<dynamic />
+		</sizelimits>
+		<script>
+			function onInit()
+				CCWizard.registerWindow(self);
+			end
+			function onClose()
+				CCWizard.unregisterWindow(self);
+			end
+		</script>
+		<sheetdata>
+			<windowtitlebar_utilitybox name="title">
+				<resource>ccwiz_title</resource>
+			</windowtitlebar_utilitybox>
+			<windowmenubar_utilitybox name="menubar" />
+			<anchor_content_utilitybox_top />
+			<anchor_content_utilitybox_bottom />
+
+			<sub_content_top name="sub_tabs">
+				<anchored height="44" />
+				<class>ccwiz_tabs</class>
+			</sub_content_top>
+
+			<sub_content_framed_groupbox_hidden name="sub_abilities"><class>ccwiz_page_abilities</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_race"><class>ccwiz_page_race</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_class"><class>ccwiz_page_class</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_primes"><class>ccwiz_page_primes</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_hp"><class>ccwiz_page_hp</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_equipment"><class>ccwiz_page_equipment</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_spells"><class>ccwiz_page_spells</class></sub_content_framed_groupbox_hidden>
+			<sub_content_framed_groupbox_hidden name="sub_finish"><class>ccwiz_page_finish</class></sub_content_framed_groupbox_hidden>
+
+			<scrollbar_content_base><anchored to="sub_abilities" /><target>sub_abilities</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_race" /><target>sub_race</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_class" /><target>sub_class</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_primes" /><target>sub_primes</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_hp" /><target>sub_hp</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_equipment" /><target>sub_equipment</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_spells" /><target>sub_spells</target></scrollbar_content_base>
+			<scrollbar_content_base><anchored to="sub_finish" /><target>sub_finish</target></scrollbar_content_base>
+
+			<resize_utilitybox />
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="ccwiz_tabs">
+		<sheetdata>
+			<genericcontrol name="leftanchor">
+				<anchored position="insidetopleft" offset="6,8" width="0" height="28" />
+				<disabled />
+			</genericcontrol>
+			<ccwiz_tab name="tab_abilities" />
+			<ccwiz_tab name="tab_race" />
+			<ccwiz_tab name="tab_class" />
+			<ccwiz_tab name="tab_primes" />
+			<ccwiz_tab name="tab_hp" />
+			<ccwiz_tab name="tab_equipment" />
+			<ccwiz_tab name="tab_spells" />
+			<ccwiz_tab name="tab_finish" />
+		</sheetdata>
+	</windowclass>
+</root>

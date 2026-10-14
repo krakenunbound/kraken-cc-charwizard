@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+	<!-- Faded art behind a whole page; first in sheetdata so it draws underneath. -->
+	<template name="ccwiz_wallpaper">
+		<genericcontrol name="wallpaper">
+			<bounds>0,0,-1,-1</bounds>
+			<disabled />
+		</genericcontrol>
+	</template>
+
+	<!-- Title bar across the top of a page -->
+	<template name="ccwiz_header">
+		<stringcontrol name="header">
+			<bounds>10,8,-10,22</bounds>
+			<frame name="metalplate" offset="0,2,0,2" />
+			<font>subwindowsmalltitle</font>
+			<center />
+			<nodrag />
+			<readonly />
+		</stringcontrol>
+	</template>
+
+	<!-- Page introduction text -->
+	<template name="ccwiz_lore">
+		<stringcontrol name="lore">
+			<font>sheettext</font>
+			<multilinespacing>16</multilinespacing>
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+
+	<!-- One tab button across the top of the wizard -->
+	<template name="ccwiz_tab">
+		<button_text>
+			<anchored to="leftanchor" width="112" height="28">
+				<top />
+				<left relation="relative" offset="4" postoffset="4" />
+			</anchored>
+			<script>
+				function onButtonPress()
+					CCWizard.showTab(getName():gsub("^tab_", ""));
+				end
+			</script>
+		</button_text>
+	</template>
+
+	<!-- Draggable attribute score: drop one on another to swap. -->
+	<template name="ccwiz_scoreslot">
+		<numbercontrol>
+			<hideonvalue>0</hideonvalue>
+			<frame name="fieldlight" offset="7,5,7,5" />
+			<font>sheetnumber</font>
+			<center />
+			<readonly />
+			<nokeyedit />
+			<script>
+				function onDragStart(button, x, y, draginfo)
+					draginfo.setType("ccwiz_swap");
+					draginfo.setStringData(getName():gsub("^score_", ""));
+					draginfo.setDescription(tostring(getValue()));
+					return true;
+				end
+				function onDrop(x, y, draginfo)
+					if draginfo.isType("ccwiz_swap") then
+						CCWizard.swapScores(draginfo.getStringData(), getName():gsub("^score_", ""));
+						return true;
+					end
+				end
+			</script>
+		</numbercontrol>
+	</template>
+
+	<!-- Small read-only value box -->
+	<template name="ccwiz_value">
+		<stringcontrol>
+			<frame name="fieldlight" offset="7,5,7,5" />
+			<font>sheettext</font>
+			<center />
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+
+	<!-- ===== Building blocks in the style of the FGU 5e character wizard ===== -->
+
+	<!-- Collapsible Instructions section at the top of a page; open or closed on
+	     every page together. The page sets the text (its lore, then steps). -->
+	<windowclass name="ccwiz_instructions">
+		<script>
+			function onInit()
+				update();
+			end
+			function setText(s)
+				text.setValue(s);
+			end
+			function update()
+				local bShow = CCWizard.getInstructionsShown();
+				text.setVisible(bShow);
+				button_toggle.setValue(bShow and 0 or 1);
+			end
+			function toggleInstructions()
+				CCWizard.setInstructionsShown(not CCWizard.getInstructionsShown());
+			end
+		</script>
+		<sheetdata>
+			<anchor_content_top />
+			<header_content_framed_metalplate name="header">
+				<static textres="ccwiz_header_instructions" />
+				<script>
+					function onClickDown() return true; end
+					function onClickRelease() window.toggleInstructions(); return true; end
+				</script>
+			</header_content_framed_metalplate>
+			<buttoncontrol name="button_toggle">
+				<anchored to="header" position="insidetopright" offset="10,0" width="20" height="20" />
+				<state icon="button_toolbar_collapse" />
+				<state icon="button_toolbar_expand" />
+				<script>
+					function onClickDown() return true; end
+					function onClickRelease() window.toggleInstructions(); return true; end
+				</script>
+			</buttoncontrol>
+			<stringc_content_noframe_noscroll_static_top name="text">
+				<anchored>
+					<left offset="10" />
+					<right offset="-10" />
+				</anchored>
+			</stringc_content_noframe_noscroll_static_top>
+			<spacer_content_top name="spacer" />
+		</sheetdata>
+	</windowclass>
+
+	<!-- Source and Name filters above a pick list. The page calls setKind. -->
+	<windowclass name="ccwiz_filter">
+		<script>
+			local _sKind = "race";
+			function setKind(sKind, sType)
+				_sKind = sKind;
+				local tFilter = CCWizard.getFilter(sKind);
+				source.clear();
+				source.add("", Interface.getString("ccwiz_label_allsources"));
+				for _, s in ipairs(CCWizard.getSources(sType)) do
+					source.add(s, s);
+				end
+				source.setValue(tFilter.source or "");
+				if name.getValue() ~= (tFilter.name or "") then
+					name.setValue(tFilter.name or "");
+				end
+			end
+			function onSourceChanged(s)
+				CCWizard.setFilter(_sKind, "source", s);
+			end
+			function onNameChanged(s)
+				CCWizard.setFilter(_sKind, "name", s);
+			end
+		</script>
+		<sheetdata>
+			<label><bounds>10,6,100,22</bounds><static textres="ccwiz_label_source" /><frame name="headersimple" offset="4,2,4,2" /></label>
+			<comboboxc name="source">
+				<bounds>120,6,-10,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<listdirection>down</listdirection>
+				<listmaxsize>8</listmaxsize>
+				<unsorted />
+				<script>function onSelect(sValue) window.onSourceChanged(sValue); end</script>
+			</comboboxc>
+			<label><bounds>10,36,100,22</bounds><static textres="ccwiz_label_filtername" /><frame name="headersimple" offset="4,2,4,2" /></label>
+			<stringcontrol name="name">
+				<bounds>120,36,-10,22</bounds>
+				<frame name="fieldlight" offset="7,5,7,5" />
+				<font>sheettext</font>
+				<script>function onValueChanged() window.onNameChanged(getValue()); end</script>
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- One record in a pick list: + to choose, the name (click to read), its
+	     source; the Castle Keeper's allow tick at the right (host only). -->
+	<windowclass name="ccwiz_pick_row">
+		<margins control="0,0,0,4" />
+		<frame>groupbox</frame>
+		<script>
+			local _sPath = "";
+			local _sKind = "";
+			local _bSetting = false;
+			function setData(node, sKind)
+				_sPath = DB.getPath(node);
+				_sKind = sKind;
+				local sName = DB.getValue(node, "name", "");
+				local bBlocked = CCWizard.isBlocked(sName);
+				local sReason = (sKind == "class") and CCWizard.getClassBlockReason(node) or nil;
+				name.setValue(sName .. (bBlocked and "  (DM only)" or "") .. (sReason and ("  -  " .. sReason) or ""));
+				add.setVisible(sReason == nil);
+				if sReason then name.setColor("7F7F7F"); end
+				source.setValue(CCWizard.getSourceName(node));
+				allow.setVisible(Session.IsHost);
+				_bSetting = true;
+				allow.setValue(bBlocked and 0 or 1);
+				_bSetting = false;
+			end
+			function onAdd()
+				local node = DB.findNode(_sPath);
+				if _sKind == "race" then
+					CCWizard.selectRace(node);
+				else
+					CCWizard.selectClass(node);
+				end
+			end
+			function onOpen()
+				CCWizard.openRecord(_sPath);
+			end
+			function onAllow(bAllow)
+				if _bSetting then return; end
+				CCWizard.setBlocked(DB.getValue(DB.findNode(_sPath), "name", ""), not bAllow);
+			end
+		</script>
+		<sheetdata>
+			<buttoncontrol name="add">
+				<bounds>8,5,20,20</bounds>
+				<icon normal="button_add" />
+				<tooltip text="Choose" />
+				<script>function onButtonPress() window.onAdd(); end</script>
+			</buttoncontrol>
+			<buttoncontrol name="link">
+				<bounds>32,5,20,20</bounds>
+				<icon normal="button_link" />
+				<tooltip text="Read the record" />
+				<script>function onButtonPress() window.onOpen(); end</script>
+			</buttoncontrol>
+			<stringcontrol name="name">
+				<bounds>58,5,-300,20</bounds>
+				<font>reference-b</font>
+				<readonly />
+				<nodrag />
+				<script>function onClickDown() return true; end function onClickRelease() window.onOpen(); return true; end</script>
+			</stringcontrol>
+			<stringcontrol name="source">
+				<bounds>-296,5,-36,20</bounds>
+				<font>reference-b</font>
+				<center />
+				<readonly />
+				<nodrag />
+			</stringcontrol>
+			<buttonc_checkbox name="allow">
+				<bounds>-28,5,20,20</bounds>
+				<tooltip text="Castle Keeper: untick to hide this choice from players" />
+				<invisible />
+				<script>function onValueChanged() window.onAllow(getValue() == 1); end</script>
+			</buttonc_checkbox>
+		</sheetdata>
+	</windowclass>
+
+	<!-- A collapsible card: one racial trait or class ability. Click the title to open it. -->
+	<windowclass name="ccwiz_card">
+		<margins control="0,0,0,6" />
+		<frame>groupbox</frame>
+		<script>
+			function setData(sTitle, sText, bOpen)
+				title.setValue(sTitle);
+				text.setValue(sText or "");
+				setOpen(bOpen and (sText or "") ~= "");
+			end
+			function setOpen(bOpen)
+				text.setVisible(bOpen);
+				button_toggle.setValue(bOpen and 0 or 1);
+			end
+			function toggleCard()
+				setOpen(not text.isVisible());
+			end
+		</script>
+		<sheetdata>
+			<anchor_content_top>
+				<anchored>
+					<top offset="9" />
+					<left offset="16" />
+					<right offset="-16" />
+				</anchored>
+			</anchor_content_top>
+			<stringcontrol name="title">
+				<anchored to="contentanchor" height="20">
+					<top relation="relative" offset="0" postoffset="2" />
+					<left />
+					<right offset="-26" />
+				</anchored>
+				<font>reference-b</font>
+				<readonly />
+				<nodrag />
+				<script>function onClickDown() return true; end function onClickRelease() window.toggleCard(); return true; end</script>
+			</stringcontrol>
+			<buttoncontrol name="button_toggle">
+				<anchored to="title" position="righthigh" offset="4,0" width="20" height="20" />
+				<state icon="button_toolbar_collapse" />
+				<state icon="button_toolbar_expand" />
+				<script>
+					function onInit()
+						setColor(UtilityManager.getControlFontColor(window, "title"));
+					end
+					function onClickDown() return true; end
+					function onClickRelease() window.toggleCard(); return true; end
+				</script>
+			</buttoncontrol>
+			<stringc_content_noframe_noscroll_static_top name="text" />
+			<spacer_content_top name="spacer" />
+		</sheetdata>
+	</windowclass>
+
+	<!-- Attribute badges (5e wizard): short name, total, modifier. -->
+	<template name="ccwiz_badge_label">
+		<stringcontrol>
+			<frame name="headersimple" offset="2,1,2,1" />
+			<font>sheetlabel</font>
+			<center />
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+	<template name="ccwiz_badge_total">
+		<stringcontrol>
+			<frame name="groupbox" offset="2,2,2,2" />
+			<font>reference-h</font>
+			<center />
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+	<template name="ccwiz_badge_mod">
+		<stringcontrol>
+			<frame name="fieldlight" offset="4,2,4,2" />
+			<font>sheetlabel</font>
+			<center />
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+	<!-- A prime marker on a badge. -->
+	<template name="ccwiz_prime_mark">
+		<genericcontrol>
+			<icon>button_checkon</icon>
+			<tooltip text="Prime" />
+			<invisible />
+			<disabled />
+		</genericcontrol>
+	</template>
+	<!-- A metal-plate bar inside a fixed panel (the breakdown rows). -->
+	<template name="ccwiz_bar">
+		<stringcontrol>
+			<frame name="metalplate" offset="0,2,0,2" />
+			<font>subwindowsmalltitle</font>
+			<center />
+			<readonly />
+			<nodrag />
+		</stringcontrol>
+	</template>
+
+	<!-- One line of the Finish page's warnings. -->
+	<windowclass name="ccwiz_warning_row">
+		<margins control="0,0,0,2" />
+		<sheetdata>
+			<genericcontrol name="icon">
+				<bounds>10,3,18,18</bounds>
+				<icon>ccwiz_alert</icon>
+				<disabled />
+			</genericcontrol>
+			<stringcontrol name="tag">
+				<bounds>34,2,90,20</bounds>
+				<font>reference-b</font>
+				<static textres="ccwiz_label_warning" />
+				<readonly />
+				<nodrag />
+			</stringcontrol>
+			<stringcontrol name="text">
+				<bounds>128,2,-10,20</bounds>
+				<font>sheettext</font>
+				<readonly />
+				<nodrag />
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<!-- Single-line text entry saved in the wizard's build (field name = S key). -->
+	<template name="ccwiz_entry">
+		<stringcontrol>
+			<frame name="fieldlight" offset="7,5,7,5" />
+			<font>sheettext</font>
+			<script>
+				function onValueChanged()
+					CCWizard.getState()[getName():gsub("^entry_", "")] = getValue();
+					CCWizard.updateTabs();
+					if window.updateSummary then
+						window.updateSummary();
+					end
+				end
+			</script>
+		</stringcontrol>
+	</template>
+</root>

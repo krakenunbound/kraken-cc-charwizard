@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root release="1.0-beta1" version="1.0-beta1">
+	<properties>
+		<name>Official C&amp;C Character Creation Wizard</name>
+		<version>1.0-beta1</version>
+		<author>The Kraken</author>
+		<description>A guided character builder for Castles &amp; Crusades on the official CnCRPG ruleset. Abilities - Race - Class - Primes - Hit Points - Equipment - Spells - Finish. The Castle Keeper sets the starting level in Options (Character Wizard); the wizard builds the character at that level. Reads the official C&amp;C Player's Handbook and the other official books you load.</description>
+		<loadorder>200</loadorder>
+		<ruleset>CnCRPG</ruleset>
+	</properties>
+
+	<announcement text="Official C&amp;C Character Creation Wizard 1.0-beta1: open Characters and click the wizard figure to build a character." font="emotefont" />
+
+	<base>
+
+
+		<includefile source="graphics/graphics_ccwiz.xml" />
+		<includefile source="strings/strings_ccwiz.xml" />
+		<script name="CCClassCombo" file="scripts/data_classcombo.lua" />
+		<script name="CCClassRules" file="scripts/manager_classrules.lua" />
+		<script name="CCWizard" file="scripts/manager_ccwiz.lua" />
+		<includefile source="xml/template_ccwiz.xml" />
+		<includefile source="xml/ccwiz_main.xml" />
+		<includefile source="xml/ccwiz_pages.xml" />
+		<script name="CCLevelUp" file="scripts/manager_cclevelup.lua" />
+		<includefile source="xml/cclevelup.xml" />
+	</base>
+</root>

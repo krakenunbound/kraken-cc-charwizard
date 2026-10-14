@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<root>
+	<icon name="ccwiz_icon" file="graphics/icon_wizard.png" />
+	<icon name="ccwiz_dice" file="graphics/icon_dice.png" />
+	<icon name="ccwiz_alert" file="graphics/ccwiz_alert.png" />
+	<icon name="ccwiz_art_abilities" file="graphics/abilities_art.png" />
+	<icon name="ccwiz_art_race" file="graphics/race_art.png" />
+	<icon name="ccwiz_art_class" file="graphics/class_art.png" />
+	<icon name="ccwiz_art_primes" file="graphics/primes_art.png" />
+	<icon name="ccwiz_art_hp" file="graphics/hp_art.png" />
+	<icon name="ccwiz_art_equipment" file="graphics/equipment_art.png" />
+	<icon name="ccwiz_art_spells" file="graphics/spells_art.png" />
+	<icon name="ccwiz_art_finish" file="graphics/commit_art.png" />
+	<!-- Portraits by package name (lower case, letters only): ccwiz_race_<name>, ccwiz_class_<name> -->
+	<icon name="ccwiz_race_human" file="graphics/races/human.png" />
+	<icon name="ccwiz_race_dwarf" file="graphics/races/dwarf.png" />
+	<icon name="ccwiz_race_elf" file="graphics/races/elf.png" />
+	<icon name="ccwiz_race_gnome" file="graphics/races/gnome.png" />
+	<icon name="ccwiz_race_halfling" file="graphics/races/halfling.png" />
+	<icon name="ccwiz_race_halfelf" file="graphics/races/halfelf.png" />
+	<icon name="ccwiz_class_fighter" file="graphics/classes/fighter.png" />
+	<icon name="ccwiz_class_ranger" file="graphics/classes/ranger.png" />
+	<icon name="ccwiz_class_rogue" file="graphics/classes/rogue.png" />
+	<icon name="ccwiz_class_cleric" file="graphics/classes/cleric.png" />
+	<icon name="ccwiz_class_druid" file="graphics/classes/druid.png" />
+	<icon name="ccwiz_class_paladin" file="graphics/classes/paladin.png" />
+	<icon name="ccwiz_class_bard" file="graphics/classes/bard.png" />
+	<icon name="ccwiz_class_illusionist" file="graphics/classes/illusionist.png" />
+	<icon name="ccwiz_class_wizard" file="graphics/classes/wizard.png" />
+	<icon name="ccwiz_race_halforc" file="graphics/races/halforc.png" />
+	<icon name="ccwiz_class_assassin" file="graphics/classes/assassin.png" />
+	<icon name="ccwiz_class_barbarian" file="graphics/classes/barbarian.png" />
+	<icon name="ccwiz_class_monk" file="graphics/classes/monk.png" />
+	<icon name="ccwiz_class_knight" file="graphics/classes/knight.png" />
+<icon name="sidebar_icon_recordtype_ccclass" file="graphics/sidebar_ccclass.png" />
+<icon name="sidebar_icon_recordtype_ccrace" file="graphics/sidebar_ccrace.png" />
+</root>
