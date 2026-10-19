@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <root>
 	<string name="cc_spells_mini_title">Spells</string>
-	<string name="ccwiz_title">Official C&amp;C Character Creation Wizard</string>
-	<string name="ccwiz_tooltip">Build a character with the Official C&amp;C Character Creation Wizard</string>
+	<string name="ccwiz_title">C&amp;C Character Creation Wizard</string>
+	<string name="ccwiz_tooltip">Build a character with the C&amp;C Character Creation Wizard</string>
 
 	<string name="ccwiz_tab_abilities">Abilities</string>
 	<string name="ccwiz_tab_race">Race</string>

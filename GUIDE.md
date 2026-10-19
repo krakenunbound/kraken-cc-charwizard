@@ -4,7 +4,7 @@
 
 1. Download `KrakenCCCharWizard.ext` from the latest [Release](../../releases/latest).
 2. Copy it into the `extensions` folder of your Fantasy Grounds data folder, usually `%appdata%\SmiteWorks\Fantasy Grounds\extensions`.
-3. Start FGU and select (or create) a **Castles & Crusades** campaign. Click **Extensions** and tick **Official C&C Character Creation Wizard**, then start the campaign.
+3. Start FGU and select (or create) a **Castles & Crusades** campaign. Click **Extensions** and tick **C&C Character Creation Wizard**, then start the campaign.
 4. In **Library → Modules**, load the **Castles & Crusades Players Handbook**. Load any other C&C books you want the wizard to use as well: their classes and races join the Race and Class pages (the Adventurer's Backpack adds 17 classes), their gear joins the shop and their spells join the spell lists.
 
 Players don't install anything. They get the extension from the host when they connect.
@@ -73,7 +73,7 @@ For spellcasters only. The header shows your spells per day at your starting lev
 ![Spells](docs/images/08-spells.png)
 
 ### Finish
-Enter a name, alignment and any other details, check the summary, then click **Create Character**. The wizard makes the sheet with the official race and class loaders, adds your gear and spells, and opens the sheet.
+Enter a name, alignment and any other details, check the summary, then click **Create Character**. The wizard makes the sheet with the ruleset's own race and class loaders, adds your gear and spells, and opens the sheet.
 
 ![Finish](docs/images/09-finish.png)
 

@@ -4404,7 +4404,7 @@ function buildCharacter(nodeChar, level)
   end
  end
  w.tabs.activateTab(1);
- ChatManager.SystemMessage("Created "..(S.name or "").." using the official C&C character loader.");
+ ChatManager.SystemMessage("Created "..(S.name or "").." using the C&C character loader.");
  if S.unfinished and #S.unfinished>0 then
   ChatManager.SystemMessage(string.format(Interface.getString("ccwiz_msg_unfinished"),StringManager.trim(S.name or ""),table.concat(S.unfinished,", ")));
  end

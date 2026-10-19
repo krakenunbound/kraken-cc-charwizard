@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root release="1.0-beta2" version="1.0-beta2">
 	<properties>
-		<name>Official C&amp;C Character Creation Wizard</name>
+		<name>C&amp;C Character Creation Wizard</name>
 		<version>1.0-beta2</version>
 		<author>The Kraken</author>
-		<description>A guided character builder for Castles &amp; Crusades on the official CnCRPG ruleset. Abilities - Race - Class - Primes - Hit Points - Equipment - Spells - Finish. The Castle Keeper sets the starting level in Options (Character Wizard); the wizard builds the character at that level. Uses every C&amp;C book you load: races, classes, spells and gear from the Players Handbook, the Adventurer's Backpack or any other book that has them.</description>
+		<description>A guided character builder for Castles &amp; Crusades on SmiteWorks' Castles &amp; Crusades ruleset (CnCRPG). Abilities - Race - Class - Primes - Hit Points - Equipment - Spells - Finish. The Castle Keeper sets the starting level in Options (Character Wizard); the wizard builds the character at that level. Uses every C&amp;C book you load: races, classes, spells and gear from the Players Handbook, the Adventurer's Backpack or any other book that has them.</description>
 		<loadorder>200</loadorder>
 		<ruleset>CnCRPG</ruleset>
 	</properties>
 
-	<announcement text="Official C&amp;C Character Creation Wizard 1.0-beta2: open Characters and click the wizard figure to build a character. It uses every C&amp;C book you load (races, classes, spells, gear)." font="emotefont" />
+	<announcement text="C&amp;C Character Creation Wizard 1.0-beta2: open Characters and click the wizard figure to build a character. It uses every C&amp;C book you load (races, classes, spells, gear)." font="emotefont" />
 
 	<base>
 

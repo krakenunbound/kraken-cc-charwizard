@@ -1,6 +1,6 @@
 # Kraken C&C Character Wizard
 
-A guided character-creation wizard for **Castles & Crusades** on SmiteWorks' official **C&C ruleset** in **Fantasy Grounds Unity**, styled after the 5E Character Wizard.
+A guided character-creation wizard for **Castles & Crusades** on SmiteWorks' **Castles & Crusades ruleset** in **Fantasy Grounds Unity**, styled after the 5E Character Wizard.
 
 Tabbed flow: **Abilities → Race → Class → Primes → Hit Points → Equipment → Spells → Finish.**
 
@@ -28,7 +28,7 @@ It reads every C&C book you have loaded. Races, classes, spells and gear from th
 
 ![Spells tab](docs/images/08-spells.png)
 
-**…and the wizard builds the sheet through the official C&C loaders**
+**…and the wizard builds the sheet through the ruleset's own C&C loaders**
 
 ![Finished character sheet](docs/images/10-character-sheet.png)
 
@@ -51,13 +51,13 @@ Grab the latest [**Release**](../../releases/latest), then:
 
 1. Put `KrakenCCCharWizard.ext` in your Fantasy Grounds data folder under `extensions\`.
    - The data folder is usually `%appdata%\SmiteWorks\Fantasy Grounds`.
-2. Launch FGU, load a Castles & Crusades campaign as host, click **Extensions** on the load screen, and enable **Official C&C Character Creation Wizard**.
-3. In game, open **Library → Modules** and load the **Castles & Crusades Players Handbook**, plus any other official C&C books you want the wizard to use.
+2. Launch FGU, load a Castles & Crusades campaign as host, click **Extensions** on the load screen, and enable **C&C Character Creation Wizard**.
+3. In game, open **Library → Modules** and load the **Castles & Crusades Players Handbook**, plus any other C&C books you want the wizard to use.
 4. Open **Characters** and click the wizard icon in the top-left corner.
 
 ### Requirements (commercial, not included)
 - Fantasy Grounds Unity
-- The official Castles & Crusades ruleset (CnCRPG)
+- SmiteWorks' Castles & Crusades ruleset (CnCRPG)
 - The **Castles & Crusades Players Handbook** module (the core races, classes, spells and equipment). Other C&C books you load, such as the Adventurer's Backpack, add their classes, races, spells and gear.
 
 ## Release

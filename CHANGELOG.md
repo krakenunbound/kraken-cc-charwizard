@@ -16,8 +16,11 @@ Reported on Discord: the Adventurer's Backpack was loaded and its gear and spell
 - The Rune Mark's runes go on the sheet's Spells tab (the ruleset makes no spell block for it).
 
 ### Levels
-- Where the official class loader cannot set the level (the Spell Caster variants, and any level past a book's printed table), the wizard sets it: level, base to hit, class abilities, experience for the next level and caster level. This works both when creating a character and with **Lvl Up**.
+- Where the ruleset's class loader cannot set the level (the Spell Caster variants, and any level past a book's printed table), the wizard sets it: level, base to hit, class abilities, experience for the next level and caster level. This works both when creating a character and with **Lvl Up**.
 - Above the printed tables (13th level and up), the Castle Keeper's total hit points and base to hit now reach the sheet (they were lost before, leaving 0 hit points).
+
+### Name
+- The wizard is now called **C&C Character Creation Wizard** (title bar, tooltip, extension list and chat), without "Official": it is a fan-made extension, not an official product.
 
 ### Layout
 - Hit Points page at 13+: the note, the two boxes and the total no longer overlap.
@@ -27,7 +30,7 @@ Reported on Discord: the Adventurer's Backpack was loaded and its gear and spell
 
 ### Known limits
 - The Backpack classes have no class portrait yet.
-- Magic User and Divine Knight have no spell list on the official ruleset.
+- Magic User and Divine Knight have no spell list in this ruleset.
 
 ## 1.0-beta1 (2026-10-14)
 
