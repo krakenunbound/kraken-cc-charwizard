@@ -476,7 +476,9 @@
 				name.setValue(DB.getValue(node, "name", ""));
 				level.setValue(nLevel);
 				local tLines = {};
-				if not CCWizard.hasSupportedLevel() then
+				-- A level past the printed table gets one line (the Castle Keeper's HP and
+				-- BtH, below); a level the package lacks says so here.
+				if not CCWizard.hasSupportedLevel() and not CCWizard.requiresManualProgression() then
 					table.insert(tLines, CCWizard.getUnsupportedLevelMessage());
 				end
 				local sPrime = CCWizard.getClassPrime();
@@ -496,6 +498,10 @@
 				table.insert(tLines, "Source: " .. CCWizard.getSourceName(node));
 				info.setValue(table.concat(tLines, "\n"));
 				CCWizard.setPortrait(portrait, "class", DB.getValue(node, "name", ""));
+				-- A class with no portrait (another book's) uses the whole width.
+				local nX = portrait.isVisible() and 220 or 10;
+				name.setStaticBounds(nX, 10, -200, 30);
+				info.setStaticBounds(nX, 48, -10, 200);
 			end
 			function changeLevel(nDelta)
 				CCWizard.setStartLevel(CCWizard.getStartLevel() + nDelta);
@@ -668,6 +674,10 @@
 				entry_manualhp.setVisible(bManual);
 				manual_bth_label.setVisible(bManual);
 				entry_manualbth.setVisible(bManual);
+				-- Manual levels: the note, the two boxes, then the total under them (the
+				-- plan only repeats the note, so it is hidden).
+				plan.setVisible(not bManual);
+				if bManual then total.setStaticBounds(60,88,400,24); else total.setStaticBounds(270,12,400,24); end
 				if bManual then
 					manual_note.setValue(CCWizard.getUnsupportedLevelMessage());
 					entry_manualhp.setValue(S.manualhp or "");

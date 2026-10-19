@@ -123,7 +123,7 @@ function onStartingLevelChanged(keepOverride)
 	-- classes) is chosen again.
 	local sSet = S.spellset;
 	S.spellset = "main";
-	local tAllowed = getSpellsPerDay();
+	local tAllowed = getSpellPicksAllowed();
 	S.spellset = sSet;
 	S.spells2 = {};
 	local tPaths, tCounts = {}, {};
@@ -218,7 +218,8 @@ function isTabDone(sTab)
 	elseif sTab == "equipment" then
 		return S.gold ~= nil;
 	elseif sTab == "spells" then
-		return (getMainSpellClass() == "" or next(S.spells) ~= nil) and (not hasSecondSpells() or next(S.spells2) ~= nil);
+		return (getMainSpellClass() == "" or next(S.spells) ~= nil or not hasMainSpellChoices())
+			and (not hasSecondSpells() or next(S.spells2) ~= nil);
 	elseif sTab == "finish" then
 		return StringManager.trim(S.name or "") ~= "" and StringManager.trim(S.alignment or "") ~= "";
 	end
@@ -942,7 +943,9 @@ function hasSupportedLevel()
 end
 
 function getUnsupportedLevelMessage()
-	if hasPublishedLevel() and requiresManualProgression() and not hasManualProgressionValues() then
+	-- The level is published but its HP and BtH are the Castle Keeper's: say so,
+	-- also once they are entered (the note stays on the Hit Points page).
+	if hasPublishedLevel() and requiresManualProgression() then
 		return string.format(Interface.getString("ccwiz_msg_manualprogression"), getStartLevel());
 	end
 	return string.format(Interface.getString("ccwiz_msg_unsupportedlevel"), getStartLevel());
@@ -1634,6 +1637,16 @@ end
 -- A combined character can have a second spell list: a multi-class
 -- caster's, or a spell-casting supporting class's (its Supporting Spells
 -- table). The Spells page switches between them ("main" / "second").
+-- A spell class with nothing to pick from its lists (a divine knight casts
+-- with mana, a magic user channels siege points) does not hold up the step.
+function hasMainSpellChoices()
+	local sSet = S.spellset;
+	S.spellset = "main";
+	local bAny = #getSpellChoices("") > 0;
+	S.spellset = sSet;
+	return bAny;
+end
+
 function getMainSpellClass()
 	local node = getClassNode();
 	return node and DB.getValue(node, "spellclass", "") or "";
@@ -1693,6 +1706,28 @@ function getSpellsPerDay()
 		return t;
 	end
 	return getSlotsFor(node, getStartLevel());
+end
+
+-- How many spells may be picked per level: the spells per day, or for a class
+-- that casts the spells it knows (package spellmode "known") its level row's
+-- known counts ("3,2" = three 0-level, two 1st-level).
+function getSpellPicksAllowed()
+	if getSpellSet() ~= "second" then
+		local node = getClassNode();
+		if node and hasPublishedLevel() and DB.getValue(node, "spellmode", ""):lower() == "known" then
+			local nodeRow = getLevelRow(node, getStartLevel());
+			local sKnown = nodeRow and DB.getValue(nodeRow, "known", "") or "";
+			if sKnown ~= "" then
+				local t, i = {}, 0;
+				for sCount in sKnown:gmatch("[^,]+") do
+					t[i] = tonumber(sCount) or 0;
+					i = i + 1;
+				end
+				return t;
+			end
+		end
+	end
+	return getSpellsPerDay();
 end
 
 function getSlotsFor(node, nLevel)
@@ -1768,7 +1803,7 @@ function toggleSpell(sPath, bOn)
 	-- limited to the spells per day at that level.
 	if bOn then
 		local nLevel = getPowerLevelFor(DB.findNode(sPath), getSpellClass()) or 0;
-		local nAllowed = getSpellsPerDay()[nLevel] or 0;
+		local nAllowed = getSpellPicksAllowed()[nLevel] or 0;
 		if not getSpellPicks()[sPath] and countSpellsAt(nLevel) >= nAllowed then
 			ChatManager.SystemMessage(string.format(Interface.getString("ccwiz_msg_spellfull"),
 				nLevel == 0 and Interface.getString("ccwiz_spells_level0") or string.format(Interface.getString("ccwiz_spells_leveln"), nLevel), nAllowed));
@@ -1794,7 +1829,7 @@ end
 -- A plain-language row per spell level, also reporting how many picks remain.
 function describeSpellPicks()
 	local t = {};
-	local tDay = getSpellsPerDay();
+	local tDay = getSpellPicksAllowed();
 	for i = 0, 9 do
 		local nAllowed = tDay[i] or 0;
 		if nAllowed > 0 then
@@ -2162,7 +2197,7 @@ function buildFromSpec(tSpec)
 	end
 
 	-- Spells: the spec's first, then the class list for slots left.
-	local tDay = getSpellsPerDay();
+	local tDay = getSpellPicksAllowed();
 	if next(tDay) then
 		local tByName = {};
 		for _, t in ipairs(getSpellChoices("")) do
@@ -3718,6 +3753,163 @@ local OFFICIAL_METADATA = {
 },
 };
 
+-- What the Adventurer's Backpack's Advancement tables do not hold, from our
+-- SiegeCore Adventurer's Backpack: the spell list (the official books have
+-- Wizard, Illusionist, Cleric, Druid and Rune Mark lists), bonus spells, spells
+-- per day kept in the class text, and starting gold.
+local OFFICIAL_BOOK_EXTRAS = {
+["Arcane Thief"] = {
+["startgold"] = {"string","3d4x10"},
+},
+["Archer"] = {
+["startgold"] = {"string","3d8x10"},
+},
+["Bard (Spell Caster)"] = {
+["startgold"] = {"string","3d4x10"},
+["spellclass"] = {"string","Druid"},
+},
+["Divine Knight"] = {
+["startgold"] = {"string","6d4x10"},
+},
+["Ethereal Knight"] = {
+["startgold"] = {"string","6d4x10"},
+},
+["Foresworn"] = {
+["startgold"] = {"string","6d4x10"},
+},
+["Magic User"] = {
+["startgold"] = {"string","2d10x10"},
+},
+["Oathsworn"] = {
+["startgold"] = {"string","3d8x10"},
+},
+["Pacer"] = {
+["startgold"] = {"string","2d10x10"},
+},
+["Paladin (Spell Caster)"] = {
+["startgold"] = {"string","6d4x10"},
+["spellclass"] = {"string","Cleric"},
+},
+["Primal Druid"] = {
+["startgold"] = {"string","2d4x10"},
+["spellclass"] = {"string","Druid"},
+["slotbonusstat"] = {"string","wisdom"},
+["slotbonuses"] = {"string","13:1:1,16:2:1,18:3:1"},
+["levels.l01.slots"] = {"string","2,1"},
+["levels.l02.slots"] = {"string","3,2"},
+["levels.l03.slots"] = {"string","3,2,1"},
+["levels.l04.slots"] = {"string","3,3,2"},
+["levels.l05.slots"] = {"string","4,3,2,1"},
+["levels.l06.slots"] = {"string","4,3,3,2"},
+["levels.l07.slots"] = {"string","4,4,3,3,1"},
+["levels.l08.slots"] = {"string","4,4,3,3,2"},
+["levels.l09.slots"] = {"string","5,4,4,3,2,1"},
+["levels.l10.slots"] = {"string","5,4,4,4,3,2"},
+["levels.l11.slots"] = {"string","5,5,4,4,3,2,1"},
+["levels.l12.slots"] = {"string","5,5,4,4,3,3,2"},
+["levels.l13.slots"] = {"string","5,5,5,4,4,3,2"},
+["levels.l14.slots"] = {"string","6,5,5,4,4,3,2,1"},
+["levels.l15.slots"] = {"string","6,5,5,5,4,4,3,2"},
+["levels.l16.slots"] = {"string","6,6,5,5,4,4,3,2"},
+["levels.l17.slots"] = {"string","6,6,5,5,5,4,3,3"},
+["levels.l18.slots"] = {"string","6,6,6,5,5,4,4,3"},
+["levels.l19.slots"] = {"string","6,6,6,5,5,5,4,3"},
+["levels.l20.slots"] = {"string","7,6,6,5,5,5,4,4"},
+},
+["Ranger (Spell Caster)"] = {
+["startgold"] = {"string","3d8x10"},
+["spellclass"] = {"string","Druid"},
+},
+["Rune Mark"] = {
+["startgold"] = {"string","2d10x10"},
+["spellclass"] = {"string","Rune Mark"},
+["spellmode"] = {"string","known"},
+["slotbonusstat"] = {"string","charisma"},
+["slotbonuses"] = {"string","13:1:1,16:1:1,18:1:1"},
+["levels.l01.slots"] = {"string","0,4"},
+["levels.l01.known"] = {"string","0,4"},
+["levels.l02.slots"] = {"string","0,5"},
+["levels.l02.known"] = {"string","0,5"},
+["levels.l03.slots"] = {"string","0,6"},
+["levels.l03.known"] = {"string","0,6"},
+["levels.l04.slots"] = {"string","0,7"},
+["levels.l04.known"] = {"string","0,7"},
+["levels.l05.slots"] = {"string","0,8"},
+["levels.l05.known"] = {"string","0,8"},
+["levels.l06.slots"] = {"string","0,9"},
+["levels.l06.known"] = {"string","0,9"},
+["levels.l07.slots"] = {"string","0,10"},
+["levels.l07.known"] = {"string","0,10"},
+["levels.l08.slots"] = {"string","0,11"},
+["levels.l08.known"] = {"string","0,11"},
+["levels.l09.slots"] = {"string","0,12"},
+["levels.l09.known"] = {"string","0,12"},
+["levels.l10.slots"] = {"string","0,13"},
+["levels.l10.known"] = {"string","0,13"},
+["levels.l11.slots"] = {"string","0,14"},
+["levels.l11.known"] = {"string","0,14"},
+["levels.l12.slots"] = {"string","0,15"},
+["levels.l12.known"] = {"string","0,15"},
+["levels.l13.slots"] = {"string","0,16"},
+["levels.l13.known"] = {"string","0,16"},
+["levels.l14.slots"] = {"string","0,17"},
+["levels.l14.known"] = {"string","0,17"},
+["levels.l15.slots"] = {"string","0,18"},
+["levels.l15.known"] = {"string","0,18"},
+["levels.l16.slots"] = {"string","0,19"},
+["levels.l16.known"] = {"string","0,19"},
+["levels.l17.slots"] = {"string","0,20"},
+["levels.l17.known"] = {"string","0,20"},
+["levels.l18.slots"] = {"string","0,21"},
+["levels.l18.known"] = {"string","0,21"},
+["levels.l19.slots"] = {"string","0,22"},
+["levels.l19.known"] = {"string","0,22"},
+["levels.l20.slots"] = {"string","0,23"},
+["levels.l20.known"] = {"string","0,23"},
+["levels.l21.slots"] = {"string","0,24"},
+["levels.l21.known"] = {"string","0,24"},
+["levels.l22.slots"] = {"string","0,25"},
+["levels.l22.known"] = {"string","0,25"},
+["levels.l23.slots"] = {"string","0,26"},
+["levels.l23.known"] = {"string","0,26"},
+["levels.l24.slots"] = {"string","0,27"},
+["levels.l24.known"] = {"string","0,27"},
+},
+["Seeker"] = {
+["startgold"] = {"string","1d10x10"},
+},
+["Skald"] = {
+["startgold"] = {"string","1d10x10"},
+},
+["Thief"] = {
+["startgold"] = {"string","3d4x10"},
+},
+["Warrior Priest"] = {
+["startgold"] = {"string","2d10x10"},
+["spellclass"] = {"string","Cleric"},
+["levels.l01.slots"] = {"string","2,1"},
+["levels.l02.slots"] = {"string","3,2"},
+["levels.l03.slots"] = {"string","3,2,1"},
+["levels.l04.slots"] = {"string","3,3,2"},
+["levels.l05.slots"] = {"string","4,3,2,1"},
+["levels.l06.slots"] = {"string","4,3,3,2"},
+["levels.l07.slots"] = {"string","4,4,3,2,1"},
+["levels.l08.slots"] = {"string","4,4,3,3,2"},
+["levels.l09.slots"] = {"string","5,4,4,3,2,1"},
+["levels.l10.slots"] = {"string","5,4,4,3,3,2"},
+["levels.l11.slots"] = {"string","5,5,4,4,3,2,1"},
+["levels.l12.slots"] = {"string","5,5,4,4,3,3,2"},
+["levels.l13.slots"] = {"string","5,5,5,4,4,3,2"},
+["levels.l14.slots"] = {"string","6,5,5,4,4,3,3,1"},
+["levels.l15.slots"] = {"string","6,5,5,5,4,4,3,2"},
+["levels.l16.slots"] = {"string","6,6,5,5,4,4,3,2"},
+["levels.l17.slots"] = {"string","6,6,5,5,5,4,3,3"},
+["levels.l18.slots"] = {"string","6,6,6,5,5,4,4,3"},
+["levels.l19.slots"] = {"string","6,6,6,5,5,5,4,3"},
+["levels.l20.slots"] = {"string","7,6,6,5,5,5,4,4"},
+},
+};
+
 local originalReset = reset;
 function reset()
  prepareOfficialRecords();
@@ -3726,22 +3918,191 @@ end
 function forEachOfficial(kind, fn)
  for _, node in pairs(DB.getChildren("ccwizardofficial." .. kind)) do fn(node); end
 end
+-- Classes and races come from every loaded book, as the 2E wizard does
+-- (Discord, 2026-10-19: the Adventurer's Backpack classes were missing).
+-- A Players Handbook class or race uses OFFICIAL_METADATA. Any other class is
+-- read from its own record: hit die, prime and the Advancement table (level,
+-- HD, BtH, XP and spells per day). A variant like "Ranger (Spell Caster)"
+-- starts from the base class's metadata. OFFICIAL_BOOK_EXTRAS adds what a
+-- book's table does not hold (spell list, bonus spells, starting gold).
+local function findMetadata(tData, name, exact)
+ local want = (exact and name or name:gsub(" %(.*%)", "")):lower();
+ for key, value in pairs(tData) do if key:lower() == want then return value; end end
+ return nil;
+end
+local function applyMetadata(node, metadata)
+ for field, value in pairs(metadata or {}) do
+  local old = DB.getChild(node, field); if old then DB.deleteNode(old); end
+  DB.setValue(node, field, value[1], value[2]);
+ end
+end
+local function setField(node, field, sType, value)
+ local old = DB.getChild(node, field); if old then DB.deleteNode(old); end
+ DB.setValue(node, field, sType, value);
+end
+local function tableCells(sRow)
+ local t = {};
+ for sCell in sRow:gmatch("<td[^>]*>(.-)</td>") do
+  table.insert(t, StringManager.trim((sCell:gsub("<[^>]+>", ""):gsub("&nbsp;", " "))));
+ end
+ return t;
+end
+local function toNumber(s)
+ return tonumber(((s or ""):gsub("[^%d%-]", "")));
+end
+-- The Advancement table of a class record: true when it gave level rows.
+local function readAdvancement(source, node)
+ local sText = DB.getValue(source, "text");
+ if type(sText) ~= "string" then return false; end
+ for sTable in sText:gmatch("<table[^>]*>(.-)</table>") do
+  local rows = {};
+  for sRow in sTable:gmatch("<tr[^>]*>(.-)</tr>") do table.insert(rows, tableCells(sRow)); end
+  local nHD, nBtH, nXP, nSlots;
+  for _, row in ipairs(rows) do
+   if (row[1] or ""):lower() == "level" then
+    for i, s in ipairs(row) do
+     s = s:lower();
+     if s == "hd" then nHD = i; elseif s == "bth" then nBtH = i;
+     elseif s == "epp" or s == "xp" or s == "exp" then nXP = i;
+     elseif s:find("spells") then nSlots = i; end
+    end
+    break;
+   end
+  end
+  -- No heading row (the Spell Caster paladin): level, XP, spells per day.
+  if not nXP and #rows > 0 and (rows[1][1] or ""):match("^%d+$") then
+   nXP = 2; nSlots = 3;
+  end
+  local tLevels, nLast, nLastXP = {}, 0, 0;
+  local nDice, sDie, nFlat, nStep = 0, "", 0, nil;
+  local nFrom, nRate;
+  for _, row in ipairs(rows) do
+   local sLevel = row[1] or "";
+   if sLevel:match("^%d+$") and nXP and row[nXP] then
+    local n = tonumber(sLevel);
+    local tRow = { xp = toNumber(row[nXP]) or 0 };
+    if nBtH and row[nBtH] then tRow.bth = toNumber(row[nBtH]) or 0; end
+    if nHD and row[nHD] then
+     local s = row[nHD]:lower();
+     local sD = s:match("^1?(d%d+)$");
+     if sD then
+      nDice = nDice + 1; sDie = sD;
+     else
+      -- "+4 HP" a level after the last hit die (a misprint like "15" repeats the last step).
+      local nAdd = tonumber(s:match("^%+?%s*(%d+)") or "");
+      if nAdd and nAdd <= 10 then nStep = nAdd; end
+      if nStep then nFlat = nFlat + nStep; end
+     end
+     if nDice > 0 then tRow.hd = nDice .. sDie .. (nFlat > 0 and ("+" .. nFlat) or ""); end
+    end
+    if nSlots then
+     local t = {};
+     for i = nSlots, #row do if row[i] ~= "" then table.insert(t, toNumber(row[i]) or 0); end end
+     if #t > 0 then tRow.slots = table.concat(t, ","); end
+    end
+    tLevels[n] = tRow; nLast = math.max(nLast, n); nLastXP = tRow.xp;
+   elseif sLevel:match("^%d+%+$") then
+    nFrom = tonumber(sLevel:match("%d+"));
+    nRate = toNumber((row[2] or ""):match("[%d,]+"));
+   end
+  end
+  if tLevels[1] then
+   for n, tRow in pairs(tLevels) do
+    local sPath = string.format("levels.l%02d.", n);
+    DB.setValue(node, sPath .. "level", "number", n);
+    DB.setValue(node, sPath .. "xp", "number", tRow.xp);
+    if tRow.bth then DB.setValue(node, sPath .. "bth", "number", tRow.bth); end
+    if tRow.hd then DB.setValue(node, sPath .. "hd", "string", tRow.hd); end
+    if tRow.slots then DB.setValue(node, sPath .. "slots", "string", tRow.slots); end
+   end
+   -- "13+: +200,000 per level": XP to 24th level; HP and BtH are the CK's.
+   if nFrom and nRate and nFrom == nLast + 1 then
+    for n = nFrom, 24 do
+     local sPath = string.format("levels.l%02d.", n);
+     DB.setValue(node, sPath .. "level", "number", n);
+     DB.setValue(node, sPath .. "xp", "number", nLastXP + nRate * (n - nLast));
+     DB.setValue(node, sPath .. "bth", "number", 0);
+     DB.setValue(node, sPath .. "hd", "string", "");
+    end
+    setField(node, "manualprogression", "number", 1);
+    setField(node, "manualfromlevel", "number", nFrom);
+    setField(node, "manualbth", "number", tLevels[nLast].bth or 0);
+    setField(node, "xpcontinuationfrom", "number", nFrom);
+    setField(node, "xpcontinuationbase", "number", nLastXP);
+    setField(node, "xpcontinuationrate", "number", nRate);
+   end
+   if sDie ~= "" then setField(node, "hitdie", "string", sDie); end
+   return true;
+  end
+ end
+ return false;
+end
+local function readClass(source, node, name, tSpellLists)
+ local base = findMetadata(OFFICIAL_METADATA, name, false);
+ if base then
+  applyMetadata(node, base);
+ else
+  setField(node, "ccgen", "number", 1);
+  setField(node, "packagetype", "string", "Class");
+  setField(node, "primechoice", "number", 0);
+ end
+ -- The hit die is text ("d8") or a dice field ({"d8"}).
+ local vDie = DB.getValue(source, "hitdie");
+ if type(vDie) == "table" then vDie = vDie[1]; end
+ local sDie = type(vDie) == "string" and vDie:lower():match("(d%d+)") or nil;
+ if sDie then setField(node, "hitdie", "string", sDie); elseif not base then setField(node, "hitdie", "string", ""); end
+ if not readAdvancement(source, node) and not base then return false; end
+ local sPrime = DB.getValue(source, "primeattribute");
+ sPrime = type(sPrime) == "string" and sPrime:lower() or "";
+ if not base and sPrime ~= "" then
+  for _, s in ipairs({ "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma" }) do
+   if sPrime:find(s, 1, true) then DB.setValue(node, "primes." .. s, "number", 1); end
+  end
+ end
+ applyMetadata(node, findMetadata(OFFICIAL_BOOK_EXTRAS, name, true));
+ -- A class of another book that casts from a spell list named for it.
+ if DB.getValue(node, "spellclass", "") == "" and tSpellLists[name:lower()] then
+  setField(node, "spellclass", "string", tSpellLists[name:lower()]);
+ end
+ return DB.getChild(node, "levels.l01") ~= nil;
+end
+local function readRace(source, node)
+ setField(node, "ccgen", "number", 1);
+ setField(node, "packagetype", "string", "Race");
+ setField(node, "primechoice", "number", 1);
+ local vSpeed = DB.getValue(source, "speed");
+ if type(vSpeed) == "number" then vSpeed = vSpeed > 0 and (vSpeed .. " ft.") or ""; end
+ setField(node, "speed", "string", type(vSpeed) == "string" and vSpeed or "");
+end
 function prepareOfficialRecords()
  if not Session.IsHost then return; end
  local previous=DB.findNode("ccwizardofficial");if previous then DB.deleteNode(previous);end
  local root = DB.createNode("ccwizardofficial");
+ -- The spell lists of the loaded books ("Druid 1, Cleric 2" gives Druid, Cleric).
+ local tSpellLists = {};
+ RecordManager.callForEachRecord("spell", function(source)
+  for sList in DB.getValue(source, "level", ""):gmatch("([^,%d]+)%d") do
+   sList = StringManager.trim(sList);
+   if sList ~= "" then tSpellLists[sList:lower()] = sList; end
+  end
+ end);
  local function populate(recordType, kind)
   RecordManager.callForEachRecord(recordType, function(source)
    local name = DB.getValue(source, "name", "");
-   local metadata;local simple=(name:gsub(" %(.*%)", "")):lower();for key,value in pairs(OFFICIAL_METADATA) do if key:lower()==simple then metadata=value;break;end end;
-   if (kind == "races" or kind == "classes") and (not metadata or not DB.getPath(source):find("@Castles and Crusades Players Handbook",1,true)) then return; end
+   if (kind == "races" or kind == "classes") and name == "" then return; end
    local key = DB.getPath(source):gsub("[^%w]", "_");
    local node = DB.createNode("ccwizardofficial." .. kind .. "." .. key);
    DB.copyNode(source, node);
    DB.setValue(node, "officialpath", "string", DB.getPath(source));
-   if metadata then for field, value in pairs(metadata) do local old=DB.getChild(node,field);if old then DB.deleteNode(old);end;DB.setValue(node, field, value[1], value[2]); end end
-   if kind == "races" then local traits=DB.getChild(source,"traits");if traits then DB.copyNode(traits,DB.createChild(node,"abilities"));end end
-   if kind == "items" then
+   if kind == "classes" then
+    local metadata = findMetadata(OFFICIAL_METADATA, name, true);
+    if metadata then applyMetadata(node, metadata);
+    elseif not readClass(source, node, name, tSpellLists) then DB.deleteNode(node); return; end
+   elseif kind == "races" then
+    local metadata = findMetadata(OFFICIAL_METADATA, name, false);
+    if metadata then applyMetadata(node, metadata); else readRace(source, node); end
+    local traits=DB.getChild(source,"traits");if traits then DB.copyNode(traits,DB.createChild(node,"abilities"));end
+   elseif kind == "items" then
     DB.setValue(node, "cost", "string", DB.getValue(source, "value", ""));
     DB.setValue(node, "type", "string", DB.getValue(source, "itemtype", ""));
    elseif kind == "spells" then
@@ -3945,6 +4306,26 @@ function addOfficialCombos(nodeChar,level)
  end
 end
 
+-- A class the official Character Builder cannot read (an Advancement table
+-- without HD and BtH columns, like the Backpack's Spell Caster ranger, paladin
+-- and bard: it says "No Advancement Table Detected" and opens no level window):
+-- the wizard sets what the builder would have, the level, base to hit, the
+-- class abilities of levels nFrom..nTo and the caster level.
+function setLevelWithoutLoader(nodeChar,proxy,nFrom,nTo)
+ local sName=DB.getValue(proxy,"name","");
+ DB.setValue(nodeChar,"classes.slot1.name","string",sName);
+ DB.setValue(nodeChar,"classes.slot1.level","number",nTo);
+ -- Base to hit never drops (past the printed levels the row holds none).
+ local row=getLevelRow(proxy,nTo);
+ if row then DB.setValue(nodeChar,"attackbonus.base","number",math.max(DB.getValue(nodeChar,"attackbonus.base",0),DB.getValue(row,"bth",0)));end
+ addOfficialAbilities(nodeChar,proxy,nFrom,nTo,sName,nil);
+ local nextRow=getExactLevelRow(proxy,nTo+1);
+ if nextRow then DB.setValue(nodeChar,"expneeded","number",DB.getValue(nextRow,"xp",0));end
+ for _,n in pairs(DB.getChildren(nodeChar,"spellset")) do
+  if DB.getValue(n,"spellclass.name","")==sName or DB.getValue(n,"spellclass.name","")==DB.getValue(proxy,"spellclass","") then DB.setValue(n,"caster_level","number",nTo);end
+ end
+end
+
 function buildCharacter(nodeChar, level)
  level=level or getStartLevel();
  for _,stat in ipairs(STATS) do DB.setValue(nodeChar,"abilities."..stat..".score","number",S.scores[stat] or 10);end
@@ -3954,15 +4335,28 @@ function buildCharacter(nodeChar, level)
  if class then
   w.onDrop(0,0,shortcut("referenceclass",DB.getValue(class,"officialpath","")));
   local popup=Interface.findWindow("class_drop_popup",DB.getPath(nodeChar,"popup"));
-  if not popup then error("Official class loader did not open; character retained for repair.");end
-  popup.content.subwindow.new_level.setValue(tostring(level));
-  -- The wizard's own hit points are written below; the loader must not roll more.
-  if popup.roll_hp then popup.roll_hp.setValue("no_roll");end
-  popup.accept.onButtonPress();
+  if popup then
+   popup.content.subwindow.new_level.setValue(tostring(level));
+   -- The wizard's own hit points are written below; the loader must not roll more.
+   if popup.roll_hp then popup.roll_hp.setValue("no_roll");end
+   popup.accept.onButtonPress();
+   -- Its level list holds only the printed rows (the Backpack prints 1-12 and
+   -- "13+"): a level past them is not set, so the wizard sets it.
+   if DB.getValue(nodeChar,"classes.slot1.level",0)~=level then
+    popup=Interface.findWindow("class_drop_popup",DB.getPath(nodeChar,"popup"));
+    if popup then popup.close();end
+    setLevelWithoutLoader(nodeChar,class,1,level);
+   end
+  else
+   setLevelWithoutLoader(nodeChar,class,1,level);
+  end
  end
  for stat,prime in pairs(S.primes) do DB.setValue(nodeChar,"abilities."..stat..".prime","number",prime and 1 or 0);end
  for stat in pairs(getForcedPrimes()) do DB.setValue(nodeChar,"abilities."..stat..".prime","number",1);end
- DB.setValue(nodeChar,"hp.total","number",S.hptotal or 0);
+ -- Rolled hit points, or past the printed levels the Castle Keeper's total and BtH.
+ DB.setValue(nodeChar,"hp.total","number",getSelectedHPTotal());
+ local _,nManualBtH=getManualProgressionValues();
+ if nManualBtH then DB.setValue(nodeChar,"attackbonus.base","number",nManualBtH);end
  if class then
   for n,gain in pairs(S.hp) do DB.setValue(nodeChar,"classes.slot1.hplog.l"..n,"number",gain);end
   DB.setValue(nodeChar,"classes.slot1.hplogclass","string",DB.getValue(class,"name",""));
@@ -3986,6 +4380,8 @@ function buildCharacter(nodeChar, level)
   w.tabs.activateTab(5);
   local block=getOfficialSpellBlock(nodeChar,getMainSpellClass(),false);
   if not block then for _,n in pairs(DB.getChildren(nodeChar,"spellset")) do block=n;break;end end
+  -- A class the official loader made no spell block for (the Backpack's rune mark).
+  if not block then block=getOfficialSpellBlock(nodeChar,getMainSpellClass(),true);DB.setValue(block,"caster_level","number",level);end
   if block then
    local sSet=S.spellset;S.spellset="main";
    addOfficialSpells(block,getSpellsPerDay(),S.spells);

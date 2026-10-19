@@ -212,7 +212,7 @@ end
 
 function chooseLevelUp(sSlot)
 	if not findClassProxy(getSlotName(sSlot)) then
-		ChatManager.SystemMessage("Level up: the class record (" .. getSlotName(sSlot) .. ") is not in a loaded Players Handbook.");
+		ChatManager.SystemMessage("Level up: the class record (" .. getSlotName(sSlot) .. ") is not in a loaded book.");
 		return;
 	end
 	L.mode = "levelup";
@@ -963,7 +963,10 @@ function setOfficialLevel(nodeChar, nodeClass, nLevel)
 	w.onDrop(0, 0, shortcut("referenceclass", DB.getValue(nodeClass, "officialpath", "")));
 	local wPopup = Interface.findWindow("class_drop_popup", DB.getPath(nodeChar, "popup"));
 	if not wPopup then
-		return false, "the official Character Builder did not open";
+		-- The builder cannot read this class's table (the Backpack's Spell Caster
+		-- variants): the wizard sets the level itself.
+		CCWizard.setLevelWithoutLoader(nodeChar, nodeClass, nLevel, nLevel);
+		return true;
 	end
 	wPopup.content.subwindow.new_level.setValue(tostring(nLevel));
 	if wPopup.roll_hp then
@@ -975,7 +978,9 @@ function setOfficialLevel(nodeChar, nodeClass, nLevel)
 		if wPopup then
 			wPopup.close();
 		end
-		return false, "the official Character Builder did not set the level";
+		-- Past the printed rows (the Backpack prints 1-12 and "13+"): the
+		-- wizard sets the level itself.
+		CCWizard.setLevelWithoutLoader(nodeChar, nodeClass, nLevel, nLevel);
 	end
 	return true;
 end

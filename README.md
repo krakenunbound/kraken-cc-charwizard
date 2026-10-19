@@ -4,7 +4,7 @@ A guided character-creation wizard for **Castles & Crusades** on SmiteWorks' off
 
 Tabbed flow: **Abilities → Race → Class → Primes → Hit Points → Equipment → Spells → Finish.**
 
-It reads the official C&C books you have loaded. The **Players Handbook** gives the races, classes and spells. Gear and spells from other official books you load (the Adventurer's Backpack, for example) show up in the shop and the spell lists, and the wizard builds the character through the ruleset's own race and class loaders.
+It reads every C&C book you have loaded. Races, classes, spells and gear from the **Players Handbook** and from any other book you load (the Adventurer's Backpack's 17 classes, for example) all show up in the wizard. A class from another book is read from its own Advancement table: hit die, prime, experience, base to hit, hit dice and spells per day. The wizard builds the character through the ruleset's own race and class loaders, and sets the level itself where the loader cannot read a book's table.
 
 > 📖 **New here? Read the [Install & User Guide](GUIDE.md).** It covers what to install, the Castle Keeper's options and a screenshot walkthrough of every tab.
 
@@ -56,7 +56,7 @@ Grab the latest [**Release**](../../releases/latest), then:
 ### Requirements (commercial, not included)
 - Fantasy Grounds Unity
 - The official Castles & Crusades ruleset (CnCRPG)
-- The **Castles & Crusades Players Handbook** module. Races, classes, spells and equipment are read from it, and without it those lists are empty.
+- The **Castles & Crusades Players Handbook** module (the core races, classes, spells and equipment). Other C&C books you load, such as the Adventurer's Backpack, add their classes, races, spells and gear.
 
 ## Release
 

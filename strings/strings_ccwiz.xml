@@ -34,7 +34,7 @@ The Castle Keeper has set the level this adventure starts at. The wizard builds 
 	<string name="ccwiz_lore_primes">Prime attributes are what your character does best. A check on a prime attribute starts from a challenge base of 12; any other starts from 18. Your class gives one prime. Tick the others you are allowed below.</string>
 	<string name="ccwiz_lore_hp">Hit points are your hero's staying power: toughness, luck and the will to keep standing. Each level rolls the class's hit die and adds your Constitution modifier. Roll once for every level the Castle Keeper has given you; the dice go to chat for all to see. If the selected class has a blank high-level HP and BtH table entry, enter the Castle Keeper's explicit total HP and BtH decision here instead; the wizard will not invent a continuation.</string>
 	<string name="ccwiz_lore_equipment">Every adventurer starts with a purse of coin, set by class. Roll it, then shop: the list shows only what you can still afford, and each purchase comes out of your purse. Armor you buy is worn when the character is made; weapons appear ready on the Combat tab. Whatever you do not spend goes into your purse.</string>
-	<string name="ccwiz_lore_spells">Spellcasters begin with the spells their training allows. The table shows how many spells of each level your character can cast each day at its starting level. Tick the spells to put on your character's Spells tab.</string>
+	<string name="ccwiz_lore_spells">Spellcasters begin with the spells their training allows. The table shows how many spells of each level your character can cast each day at its starting level. Tick the spells to put on your character's Spells tab. A class that casts the spells it knows (the elf magi) picks as many as it knows, which can be more than it casts each day.</string>
 	<string name="ccwiz_lore_finish">Give your hero a name and a few words of who they are. You can create the character at any point: anything not chosen yet is listed in the sheet's notes, to finish later with your Castle Keeper. Press Create Character: the wizard builds the sheet, adds your race and class, rolls nothing further, and opens it for you.</string>
 
 	<string name="ccwiz_label_method">Method</string>
@@ -68,7 +68,7 @@ The Castle Keeper has set the level this adventure starts at. The wizard builds 
 	<string name="ccwiz_hp_total">Total hit points: %d</string>
 	<string name="ccwiz_label_manualhp">Manual total HP</string>
 	<string name="ccwiz_label_manualbth">Manual BtH</string>
-	<string name="ccwiz_label_manualrequired">This high-level package has source XP and spell slots, but no printed HP or BtH continuation. Enter the Castle Keeper's total HP and BtH decisions on the Hit Points tab.</string>
+	<string name="ccwiz_label_manualrequired">Past the printed level table: the Castle Keeper sets the total hit points and base to hit on the Hit Points tab.</string>
 
 	<string name="ccwiz_btn_rollgold">Roll Starting Coin</string>
 	<string name="ccwiz_label_purse">Purse</string>
@@ -92,7 +92,7 @@ The Castle Keeper has set the level this adventure starts at. The wizard builds 
 	<string name="ccwiz_shop_nothing">Nothing here that you can afford.</string>
 	<string name="ccwiz_msg_rollcoinfirst">Roll your starting coin first.</string>
 	<string name="ccwiz_msg_cartreturned">Starting coin re-rolled: your purchases were returned to the shop.</string>
-	<string name="ccwiz_msg_spellfull">You already have %s spells: %d per day. Untick one to choose another.</string>
+	<string name="ccwiz_msg_spellfull">You already have %s spells: %d allowed. Untick one to choose another.</string>
 	<string name="ccwiz_label_level">Level</string>
 	<string name="ccwiz_spells_alllevels">All levels</string>
 	<string name="ccwiz_spells_level0">0-level</string>
@@ -179,13 +179,15 @@ The Castle Keeper has set the level this adventure starts at. The wizard builds 
 2. Click Roll to roll all six scores; each roll shows in chat.
 3. Drag one Base score onto another to swap them (not with 3d6 in order).
 4. The Race row and the totals fill in once you choose a race.</string>
-	<string name="ccwiz_steps_race">1. Review the races by clicking their links or names.
-2. Click the + next to the race you want.
-3. Read its traits below; click Change Race to choose again.</string>
-	<string name="ccwiz_steps_class">1. Review the classes by clicking their links or names.
-2. Click the + next to the class you want.
-3. Set the starting level with the arrows next to Level (the Castle Keeper sets the default).
-4. Read the class abilities below; to combine classes (Adventurer's Backpack), use the buttons under the class.</string>
+	<string name="ccwiz_steps_race">1. The list holds the races of every book you have loaded; Source shows which book, and narrows the list.
+2. Review the races by clicking their links or names.
+3. Click the + next to the race you want.
+4. Read its traits below; click Change Race to choose again.</string>
+	<string name="ccwiz_steps_class">1. The list holds the classes of every book you have loaded (the Adventurer's Backpack adds 17); Source shows which book, and narrows the list.
+2. Review the classes by clicking their links or names.
+3. Click the + next to the class you want.
+4. Set the starting level with the arrows next to Level (the Castle Keeper sets the default).
+5. Read the class abilities below; to combine classes (Adventurer's Backpack), use the buttons under the class.</string>
 	<string name="ccwiz_steps_primes">1. Your class's prime is ticked already.
 2. Tick the other primes your race and class allow.</string>
 	<string name="ccwiz_steps_hp">1. Click Roll Hit Points: one roll for each level, hit die plus Constitution.
