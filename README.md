@@ -6,6 +6,8 @@ Tabbed flow: **Abilities → Race → Class → Primes → Hit Points → Equipm
 
 It reads every C&C book you have loaded. Races, classes, spells and gear from the **Players Handbook** and from any other book you load (the Adventurer's Backpack's 17 classes, for example) all show up in the wizard. A class from another book is read from its own Advancement table: hit die, prime, experience, base to hit, hit dice and spells per day. The wizard builds the character through the ruleset's own race and class loaders, and sets the level itself where the loader cannot read a book's table.
 
+> 📰 **What's new:** see the [Changelog](CHANGELOG.md).
+
 > 📖 **New here? Read the [Install & User Guide](GUIDE.md).** It covers what to install, the Castle Keeper's options and a screenshot walkthrough of every tab.
 
 ## Screenshots
